@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import CategoryNav from '../components/CategoryNav';
 import ProductCard from '../components/ProductCard';
 import { ArrowUp } from 'lucide-react';
+import { fetchApi } from '../lib/api';
 
 const AllProductsClient = ({ initialData }) => {
   const [products, setProducts] = useState(initialData.data);
@@ -18,7 +19,7 @@ const AllProductsClient = ({ initialData }) => {
     
     setLoading(true);
     try {
-      const result = await fetch(`/api/products?page=${nextPage}&limit=${itemsPerBatch}`).then(r => r.json());
+      const result = await fetchApi(`/api/products?page=${nextPage}&limit=${itemsPerBatch}`);
       setProducts(prev => [...prev, ...result.data]);
       setPagination(result.pagination);
       setNextPage(prev => prev + 1);

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import CategoryNav from '../../components/CategoryNav';
 import ProductCard from '../../components/ProductCard';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { fetchApi } from '../../lib/api';
 
 const CategoryPageClient = ({ initialData, slug }) => {
   const [products, setProducts] = useState(initialData.data);
@@ -17,7 +18,7 @@ const CategoryPageClient = ({ initialData, slug }) => {
     setLoading(true);
     setCurrentPage(newPage);
     try {
-      const result = await fetch(`/api/categories/${slug}/products?page=${newPage}&limit=${itemsPerPage}`).then(r => r.json());
+      const result = await fetchApi(`/api/categories/${slug}/products?page=${newPage}&limit=${itemsPerPage}`);
       setProducts(result.data);
       setPagination(result.pagination);
       window.scrollTo({ top: 0, behavior: 'smooth' });
