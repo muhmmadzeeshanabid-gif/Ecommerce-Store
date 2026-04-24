@@ -3,7 +3,7 @@
  * Handles automatic switching between local and production backend URLs.
  */
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://backened-production-9da0.up.railway.app';
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 export const fetchApi = async (endpoint, options = {}) => {
   const url = `${BASE_URL}${endpoint}`;
