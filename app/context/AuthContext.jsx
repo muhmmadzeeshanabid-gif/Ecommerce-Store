@@ -24,7 +24,7 @@ export const AuthProvider = ({ children }) => {
     const users = JSON.parse(localStorage.getItem('zara_users') || '[]');
     
     if (users.find(u => u.email === email)) {
-      throw new Error("User already exists with this email.");
+      throw new Error("Is email se pehle hi account bana hua hai. Login karein.");
     }
 
     const newUser = { 
@@ -50,11 +50,11 @@ export const AuthProvider = ({ children }) => {
     const userExists = users.find(u => u.email === email);
 
     if (!userExists) {
-      throw new Error("No account found with this email. Please sign up.");
+      throw new Error("Is email ka koi account nahi mila. Sign up karein.");
     }
 
     if (userExists.password !== password) {
-      throw new Error("Incorrect password. Please check and try again.");
+      throw new Error("Password galat hai. Dobara check karein.");
     }
 
     setUser(userExists);
