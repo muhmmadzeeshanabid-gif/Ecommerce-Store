@@ -3,6 +3,7 @@ import "./globals.css";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import { CartProvider } from "./context/CartContext";
+import { AuthProvider } from "./context/AuthContext";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -22,16 +23,21 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className={`${outfit.variable} ${playfair.variable} font-sans bg-white text-black antialiased`}>
-        <CartProvider>
-          <Header />
-          <div className="flex flex-col min-h-screen">
-            <main className="pt-20 flex-grow">
-              {children}
-            </main>
-            <Footer />
-          </div>
-        </CartProvider>
+      <body 
+        className={`${outfit.variable} ${playfair.variable} font-sans bg-white text-black antialiased`}
+        suppressHydrationWarning
+      >
+        <AuthProvider>
+          <CartProvider>
+            <Header />
+            <div className="flex flex-col min-h-screen">
+              <main className="pt-20 flex-grow">
+                {children}
+              </main>
+              <Footer />
+            </div>
+          </CartProvider>
+        </AuthProvider>
       </body>
     </html>
   );

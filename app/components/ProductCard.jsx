@@ -2,9 +2,11 @@ import React from 'react';
 import Link from 'next/link';
 import { Star, ShoppingBag, Heart } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 
 const ProductCard = ({ product }) => {
   const { addToCart, toggleWishlist, isInWishlist } = useCart();
+  const { user, openAuthModal } = useAuth();
 
   // Robust unique stat generator (avoids NaN)
   const uniqueId = String(product?.id || product?.title || "0");
@@ -41,6 +43,10 @@ const ProductCard = ({ product }) => {
         <button 
            onClick={(e) => {
              e.preventDefault();
+             if (!user) {
+               openAuthModal();
+               return;
+             }
              addToCart(product);
            }}
            className="absolute bottom-4 right-4 bg-white p-3 shadow-md md:opacity-0 md:group-hover:opacity-100 transition-all hover:bg-black hover:text-white cursor-pointer rounded-full border border-gray-100 z-10"
@@ -51,14 +57,11 @@ const ProductCard = ({ product }) => {
 
       {/* 2. TEXT CONTENT (Left Aligned as per image) */}
       <div className="flex flex-col gap-1 px-1">
-        <h3 className="text-[15px] md:text-[17px] font-bold text-black leading-tight tracking-tight">
-           {product.brand || "ZARA Collection"}
-        </h3>
-        <p className="text-[14px] md:text-[16px] font-extrabold text-black">
-           ${product.price}
-        </p>
-        <p className="text-[13px] md:text-[14px] text-gray-400 font-medium line-clamp-1">
+        <h3 className="text-[16px] md:text-[18px] font-bold text-black leading-tight tracking-tight line-clamp-2 min-h-[48px]">
            {product.title}
+        </h3>
+        <p className="text-[14px] md:text-[16px] font-extrabold text-black mt-1">
+           ${product.price}
         </p>
         
         {/* Unique Rating & Sold Stats based on Product Hashing */}
@@ -73,6 +76,10 @@ const ProductCard = ({ product }) => {
         <button 
           onClick={(e) => {
             e.preventDefault();
+            if (!user) {
+              openAuthModal();
+              return;
+            }
             addToCart(product);
           }}
           className="md:hidden mt-4 w-full h-11 bg-black text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-full active:scale-95 flex items-center justify-center gap-2 border border-black"

@@ -19,6 +19,7 @@ export const fetchApi = async (endpoint, options = {}) => {
       ...defaultHeaders,
       ...options.headers,
     },
+    next: { revalidate: 60, ...options.next }, // Cache for 60 seconds by default
   };
 
   try {

@@ -22,6 +22,8 @@ export async function generateMetadata({ params: paramsPromise }) {
   }
 }
 
+export const revalidate = 60;
+
 const CategoryPage = async ({ params: paramsPromise }) => {
   const params = await paramsPromise;
   const { slug } = params;

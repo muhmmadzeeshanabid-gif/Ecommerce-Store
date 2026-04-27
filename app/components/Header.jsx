@@ -5,18 +5,19 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Store, ShoppingCart, User, Menu, X, LogIn, UserPlus, Mail, Lock, UserCircle, ChevronDown, Heart } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import { fetchApi } from '../lib/api';
 
 const Header = () => {
   const pathname = usePathname();
   const { getCartCount, notification, setNotification, wishlistItems } = useCart();
+  const { user, login, signup, logout, showAuthModal, openAuthModal, closeAuthModal } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [userName, setUserName] = useState("Zeeshan"); 
+  const [isSignUp, setIsSignUp] = useState(true);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [categories, setCategories] = useState([]);
+  const [authError, setAuthError] = useState("");
+  const [isAuthLoading, setIsAuthLoading] = useState(false);
 
   useEffect(() => {
     const fetchCats = async () => {
@@ -30,15 +31,37 @@ const Header = () => {
     fetchCats();
   }, []);
 
-  const handleAuth = (e) => {
+  const handleAuth = async (e) => {
     e.preventDefault();
-    setIsLoggedIn(true);
-    setIsProfileOpen(false);
+    setAuthError("");
+    setIsAuthLoading(true);
+
+    const email = e.target.email.value;
+    const password = e.target.password.value;
+    const name = e.target.name?.value;
+
+    try {
+      if (isSignUp) {
+        await signup(email, password, name);
+      } else {
+        await login(email, password);
+      }
+      closeAuthModal();
+    } catch (err) {
+      console.error("Auth error:", err);
+      setAuthError(err.message);
+    } finally {
+      setIsAuthLoading(false);
+    }
   };
 
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-    setIsProfileOpen(false);
+  const handleLogout = async () => {
+    try {
+      await logout();
+      closeAuthModal();
+    } catch (err) {
+      console.error("Logout error:", err);
+    }
   };
 
   return (
@@ -151,19 +174,19 @@ const Header = () => {
           {/* Profile Section with Personalized Avatar */}
           <button 
             className="flex items-center gap-2 cursor-pointer group" 
-            onClick={() => setIsProfileOpen(true)}
+            onClick={openAuthModal}
           >
             <div className="flex items-center justify-center w-8 h-8 md:w-9 md:h-9 bg-gray-50 rounded-full group-hover:bg-black group-hover:text-white transition-all border border-gray-100 overflow-hidden">
-              {isLoggedIn ? (
+              {user ? (
                 <span className="text-[14px] md:text-[16px] font-black uppercase text-black group-hover:text-white transform transition-transform group-active:scale-90">
-                  {userName[0]}
+                  {user.displayName ? user.displayName[0] : user.email[0]}
                 </span>
               ) : (
                 <User size={18} strokeWidth={1.5} className="text-black group-hover:text-white transition-transform group-active:scale-95" />
               )}
             </div>
             <span className="hidden lg:inline text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 group-hover:text-black transition-colors whitespace-nowrap">
-               {isLoggedIn ? userName : "Sign In"}
+               {user ? (user.displayName || user.email.split('@')[0]) : "Sign In"}
             </span>
           </button>
 
@@ -190,14 +213,15 @@ const Header = () => {
         )}
       </div>
 
-      {isProfileOpen && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[2000] flex items-center justify-center p-4" onClick={() => setIsProfileOpen(false)}>
+      {showAuthModal && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[2000] flex items-center justify-center p-4" onClick={closeAuthModal}>
            <div className="bg-white w-full max-w-[400px] shadow-2xl p-8 relative" onClick={e => e.stopPropagation()}>
-             <button className="absolute top-4 right-4 text-gray-400 hover:text-black" onClick={() => setIsProfileOpen(false)}><X size={20} /></button>
-             {isLoggedIn ? (
+             <button className="absolute top-4 right-4 text-gray-400 hover:text-black" onClick={closeAuthModal}><X size={20} /></button>
+             
+             {user ? (
                <div className="space-y-8 text-center">
-                 <div className="w-20 h-20 rounded-full bg-black text-white flex items-center justify-center text-3xl font-bold mx-auto">{userName[0]}</div>
-                 <h3 className="text-xl font-bold text-black uppercase tracking-widest">{userName}</h3>
+                 <div className="w-20 h-20 rounded-full bg-black text-white flex items-center justify-center text-3xl font-bold mx-auto">{user.displayName ? user.displayName[0] : user.email[0]}</div>
+                 <h3 className="text-xl font-bold text-black uppercase tracking-widest">{user.displayName || user.email}</h3>
                  <button onClick={handleLogout} className="w-full bg-black text-white py-5 text-[10px] font-bold uppercase tracking-[0.3em] rounded-full btn-animate">Logout Session</button>
                </div>
              ) : (
@@ -210,31 +234,46 @@ const Header = () => {
                          {isSignUp ? "Join the Zara Fashion Club" : "Login to your account"}
                        </p>
                     </div>
-
+ 
                     <form onSubmit={handleAuth} className="space-y-4">
                        {isSignUp && (
                          <div className="relative">
-                            <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={16} />
-                            <input type="text" placeholder="Full Name" className="w-full bg-gray-50 border border-transparent p-4 pl-12 text-[11px] font-bold uppercase tracking-widest focus:bg-white focus:border-black transition-all outline-none" required />
+                            <User className={`absolute left-4 top-1/2 -translate-y-1/2 ${authError ? 'text-red-400' : 'text-gray-300'}`} size={16} />
+                            <input type="text" name="name" placeholder="Full Name" className={`w-full bg-gray-50 border ${authError ? 'border-red-200 focus:border-red-500' : 'border-transparent focus:border-black'} p-4 pl-12 text-[11px] font-bold uppercase tracking-widest transition-all outline-none`} required />
                          </div>
                        )}
                        <div className="relative">
-                          <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={16} />
-                          <input type="email" placeholder="Email Address" className="w-full bg-gray-50 border border-transparent p-4 pl-12 text-[11px] font-bold uppercase tracking-widest focus:bg-white focus:border-black transition-all outline-none" required />
+                          <Mail className={`absolute left-4 top-1/2 -translate-y-1/2 ${authError ? 'text-red-400' : 'text-gray-300'}`} size={16} />
+                          <input type="email" name="email" placeholder="Email Address" className={`w-full bg-gray-50 border ${authError ? 'border-red-200 focus:border-red-500' : 'border-transparent focus:border-black'} p-4 pl-12 text-[11px] font-bold uppercase tracking-widest transition-all outline-none`} required />
                        </div>
                        <div className="relative">
-                          <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={16} />
-                          <input type="password" placeholder="Password" className="w-full bg-gray-50 border border-transparent p-4 pl-12 text-[11px] font-bold uppercase tracking-widest focus:bg-white focus:border-black transition-all outline-none" required />
+                          <Lock className={`absolute left-4 top-1/2 -translate-y-1/2 ${authError ? 'text-red-400' : 'text-gray-300'}`} size={16} />
+                          <input type="password" name="password" placeholder="Password (Min. 8 chars)" minLength="8" className={`w-full bg-gray-50 border ${authError ? 'border-red-200 focus:border-red-500' : 'border-transparent focus:border-black'} p-4 pl-12 text-[11px] font-bold uppercase tracking-widest transition-all outline-none`} required />
                        </div>
                        
-                       <button type="submit" className="w-full bg-black text-white py-5 text-[10px] font-bold uppercase tracking-[0.3em] hover:bg-neutral-800 transition-all shadow-xl active:scale-95 mt-4 rounded-full btn-animate">
-                          {isSignUp ? "Sign Up Now" : "Login Session"}
+                       {authError && (
+                         <div className="bg-red-50 p-3 border-l-4 border-red-500 animate-in fade-in slide-in-from-top-1 duration-300">
+                           <p className="text-[10px] font-black text-red-600 uppercase tracking-widest text-left">
+                             * {authError}
+                           </p>
+                         </div>
+                       )}
+
+                       <button 
+                         type="submit" 
+                         disabled={isAuthLoading}
+                         className={`w-full bg-black text-white py-5 text-[10px] font-bold uppercase tracking-[0.3em] hover:bg-neutral-800 transition-all shadow-xl active:scale-95 mt-4 rounded-full btn-animate ${isAuthLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                       >
+                          {isAuthLoading ? "Processing..." : (isSignUp ? "Sign Up Now" : "Login Session")}
                        </button>
                     </form>
-
+ 
                     <div className="pt-4 border-t border-gray-50">
                        <button 
-                         onClick={() => setIsSignUp(!isSignUp)}
+                         onClick={() => {
+                           setIsSignUp(!isSignUp);
+                           setAuthError("");
+                         }}
                          className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-black transition-colors"
                        >
                          {isSignUp ? "Already have an account? Login" : "Don't have an account? Create One"}

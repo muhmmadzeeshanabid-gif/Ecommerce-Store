@@ -7,6 +7,8 @@ export const metadata = {
   description: 'Experience clean and minimal shopping with Zara. Discover the latest fashion trends.',
 };
 
+export const revalidate = 60; // Revalidate every 60 seconds
+
 export default async function Home() {
   const brands = ["VERSACE", "ZARA", "GUCCI", "PRADA", "CALVIN KLEIN"];
   let featuredProducts = [];

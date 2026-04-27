@@ -3,12 +3,14 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Star, Minus, Plus, ChevronRight, ShoppingBag, Heart } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
+import { useAuth } from '../../context/AuthContext';
 import ProductCard from '../../components/ProductCard';
 import ProductReviews from '../../components/ProductReviews';
 
 const ProductDetailClient = ({ product, recommendations }) => {
   const router = useRouter();
   const { addToCart, toggleWishlist, isInWishlist } = useCart();
+  const { user, openAuthModal } = useAuth();
   
   const [mainImage, setMainImage] = useState(product?.images?.[0] || product?.thumbnail);
   const [quantity, setQuantity] = useState(1);
@@ -153,6 +155,10 @@ const ProductDetailClient = ({ product, recommendations }) => {
               
               <button 
                 onClick={() => {
+                  if (!user) {
+                    openAuthModal();
+                    return;
+                  }
                   const itemToAdd = {
                     ...product,
                     count: quantity

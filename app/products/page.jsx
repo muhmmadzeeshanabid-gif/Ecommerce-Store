@@ -7,6 +7,8 @@ export const metadata = {
   description: 'Explore our full collection of premium fashion, electronics, and accessories.',
 };
 
+export const revalidate = 60;
+
 const AllProductsPage = async () => {
   let initialData = null;
   try {
