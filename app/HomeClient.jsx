@@ -112,7 +112,6 @@ const HomeClient = ({ featuredProducts, brands }) => {
         <div className="sticky top-[80px] z-[40] bg-[#FAF9F6]/90 backdrop-blur-md mb-16 -mx-6 lg:-mx-20 px-6 lg:px-20 py-6 border-b border-black/5">
           <CategoryNav />
         </div>
-
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-y-16 gap-x-8">
           {featuredProducts.map((product) => (
             <ProductCard key={product.id} product={product} />

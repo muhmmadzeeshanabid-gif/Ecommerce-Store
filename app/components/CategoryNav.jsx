@@ -12,9 +12,17 @@ const CategoryNav = () => {
 
   useEffect(() => {
     const fetchCategories = async () => {
+      // Try to load from cache first for instant appearance
+      const cached = localStorage.getItem('zara_categories_cache');
+      if (cached) {
+        setCategories(JSON.parse(cached));
+        setLoading(false);
+      }
+
       try {
         const data = await fetchApi('/api/categories');
         setCategories(data);
+        localStorage.setItem('zara_categories_cache', JSON.stringify(data));
       } catch (error) {
         console.error("Failed to fetch categories:", error);
       } finally {
@@ -25,7 +33,7 @@ const CategoryNav = () => {
     fetchCategories();
   }, []);
 
-  if (loading) return (
+  if (loading && categories.length === 0) return (
     <div className="w-full py-4 px-6 flex justify-center">
       <div className="flex gap-4 overflow-hidden">
         {[1, 2, 3, 4, 5].map(i => (

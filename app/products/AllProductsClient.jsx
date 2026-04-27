@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from 'react';
-import CategoryNav from '../components/CategoryNav';
 import ProductCard from '../components/ProductCard';
+import CategoryNav from '../components/CategoryNav';
 import { ArrowUp } from 'lucide-react';
 import { fetchApi } from '../lib/api';
 
