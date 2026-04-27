@@ -204,7 +204,7 @@ const Header = () => {
         {notification && (
           <div className="bg-black text-white shadow-xl px-6 py-4 flex items-center gap-4 pointer-events-auto">
             <p className="text-xs font-bold uppercase tracking-widest whitespace-nowrap">
-              Successfully your item is cart
+              Item successfully added to cart
             </p>
             <button onClick={() => setNotification(null)} className="text-white/50 hover:text-white cursor-pointer ml-4">
               <X size={14} />
@@ -239,21 +239,21 @@ const Header = () => {
                        {isSignUp && (
                          <div className="relative">
                             <User className={`absolute left-4 top-1/2 -translate-y-1/2 ${authError ? 'text-red-400' : 'text-gray-300'}`} size={16} />
-                            <input type="text" name="name" placeholder="Full Name" className={`w-full bg-gray-50 border ${authError ? 'border-red-200 focus:border-red-500' : 'border-transparent focus:border-black'} p-4 pl-12 text-[11px] font-bold uppercase tracking-widest transition-all outline-none`} required />
+                            <input type="text" name="name" placeholder="Full Name" className={`w-full bg-gray-50 border ${authError ? 'border-red-200 focus:border-red-500' : 'border-transparent focus:border-black'} p-4 pl-12 text-[11px] font-medium uppercase tracking-widest transition-all outline-none`} required />
                          </div>
                        )}
                        <div className="relative">
                           <Mail className={`absolute left-4 top-1/2 -translate-y-1/2 ${authError ? 'text-red-400' : 'text-gray-300'}`} size={16} />
-                          <input type="email" name="email" placeholder="Email Address" className={`w-full bg-gray-50 border ${authError ? 'border-red-200 focus:border-red-500' : 'border-transparent focus:border-black'} p-4 pl-12 text-[11px] font-bold uppercase tracking-widest transition-all outline-none`} required />
+                          <input type="email" name="email" placeholder="Email Address" className={`w-full bg-gray-50 border ${authError ? 'border-red-200 focus:border-red-500' : 'border-transparent focus:border-black'} p-4 pl-12 text-[11px] font-medium uppercase tracking-widest transition-all outline-none`} required />
                        </div>
                        <div className="relative">
                           <Lock className={`absolute left-4 top-1/2 -translate-y-1/2 ${authError ? 'text-red-400' : 'text-gray-300'}`} size={16} />
-                          <input type="password" name="password" placeholder="Password (Min. 8 chars)" minLength="8" className={`w-full bg-gray-50 border ${authError ? 'border-red-200 focus:border-red-500' : 'border-transparent focus:border-black'} p-4 pl-12 text-[11px] font-bold uppercase tracking-widest transition-all outline-none`} required />
+                          <input type="password" name="password" placeholder="Password (Min. 8 chars)" minLength="8" className={`w-full bg-gray-50 border ${authError ? 'border-red-200 focus:border-red-500' : 'border-transparent focus:border-black'} p-4 pl-12 text-[11px] font-medium uppercase tracking-widest transition-all outline-none`} required />
                        </div>
                        
                        {authError && (
                          <div className="bg-red-50 p-3 border-l-4 border-red-500 animate-in fade-in slide-in-from-top-1 duration-300">
-                           <p className="text-[10px] font-black text-red-600 uppercase tracking-widest text-left">
+                           <p className="text-[10px] font-medium text-red-600 uppercase tracking-widest text-left">
                              * {authError}
                            </p>
                          </div>

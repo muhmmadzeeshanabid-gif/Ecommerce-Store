@@ -94,7 +94,7 @@ const Footer = () => {
                 <Phone size={14} />
                 +1 202 555 0192
               </a>
-              <div className="flex items-center gap-3 text-sm text-gray-300">
+              <div className="flex items-center gap-3 text-sm text-gray-500">
                 <MapPin size={14} />
                 New York, USA
               </div>
