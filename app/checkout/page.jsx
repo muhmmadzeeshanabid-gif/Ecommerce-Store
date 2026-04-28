@@ -205,11 +205,13 @@ const CheckoutPage = () => {
                                                     options={{ 
                                                         clientSecret,
                                                         appearance: {
-                                                            theme: 'stripe',
+                                                            theme: 'none',
                                                             variables: {
                                                                 colorPrimary: '#000000',
+                                                                fontFamily: "'Outfit', system-ui, sans-serif",
                                                             }
-                                                        }
+                                                        },
+                                                        loader: 'never',
                                                     }}
                                                 >
                                                     <StripePaymentForm 
