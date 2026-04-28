@@ -84,16 +84,20 @@ const STRIPE_APPEARANCE = {
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '10px',
-            padding: '12px 16px',
+            gap: '6px',
+            padding: '10px 12px',
+            transition: 'all 0.2s ease',
         },
         '.TabIcon': {
-            marginBottom: '0px', // Remove default bottom margin from icon
+            marginBottom: '0px !important',
+            width: '20px',
+            height: '20px',
         },
         '.TabLabel': {
-            marginTop: '0px', // Remove default top margin from label
-            fontWeight: '700',
+            marginTop: '0px !important',
+            fontWeight: '600',
             fontSize: '13px',
+            whiteSpace: 'nowrap',
         }
     }
 };
