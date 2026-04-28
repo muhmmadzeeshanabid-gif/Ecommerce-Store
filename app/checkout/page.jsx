@@ -49,6 +49,39 @@ const FloatingSelect = ({ label, options, required = true }) => {
     );
 };
 
+const STRIPE_APPEARANCE = {
+    theme: 'stripe',
+    variables: {
+        colorPrimary: '#000000',
+        colorBackground: '#ffffff',
+        colorText: '#000000',
+        colorDanger: '#ef4444',
+        fontFamily: 'system-ui, sans-serif',
+        borderRadius: '10px',
+        fontSizeBase: '14px',
+    },
+    rules: {
+        '.Input': {
+            border: '1.5px solid #d1d5db',
+            boxShadow: 'none',
+            padding: '12px 14px',
+            backgroundColor: '#ffffff',
+        },
+        '.Input:focus': {
+            border: '1.5px solid #000000',
+            boxShadow: '0 0 0 1px #000000',
+        },
+        '.Label': {
+            fontWeight: '600',
+            fontSize: '12px',
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em',
+            color: '#374151',
+            marginBottom: '6px',
+        },
+    }
+};
+
 const CheckoutPage = () => {
     const { cartItems, getCartTotal, clearCart } = useCart();
     const [loading, setLoading] = useState(false);
@@ -88,20 +121,6 @@ const CheckoutPage = () => {
         }
     }, []);
 
-    // If cart is empty and not ordered, redirect to cart
-    if (!isOrdered && cartItems.length === 0) {
-        return (
-            <div className="bg-[#FAF9F6] min-h-screen pt-28 pb-40 font-outfit flex flex-col items-center justify-center">
-                <div className="text-center space-y-6">
-                    <p className="text-[14px] font-bold uppercase tracking-widest text-gray-400">Your cart is empty</p>
-                    <Link href="/products" className="btn-animate inline-block px-10 py-5 bg-black text-white text-[10px] font-black uppercase tracking-[0.3em] rounded-full shadow-lg">
-                        Browse Products
-                    </Link>
-                </div>
-            </div>
-        );
-    }
-
     const cities = [
         "Lahore", "Karachi", "Islamabad", "Rawalpindi", "Faisalabad", 
         "Multan", "Peshawar", "Quetta", "Sialkot", "Gujranwala", "Bahawalpur"
@@ -118,6 +137,7 @@ const CheckoutPage = () => {
         }, 1500);
     };
 
+    // ORDER CONFIRMED
     if (isOrdered) {
         return (
             <div className="bg-white min-h-[85vh] flex flex-col items-center justify-center py-20 animate-in fade-in duration-700">
@@ -126,9 +146,7 @@ const CheckoutPage = () => {
                         <CheckCircle2 size={24} className="text-black" strokeWidth={1} />
                     </div>
                     <div className="space-y-4">
-                        <h1 className="text-2xl md:text-3xl font-light text-black uppercase tracking-[0.3em]">
-                            Order Confirmed
-                        </h1>
+                        <h1 className="text-2xl md:text-3xl font-light text-black uppercase tracking-[0.3em]">Order Confirmed</h1>
                         <p className="text-[12px] font-medium text-gray-400 uppercase tracking-widest leading-relaxed">
                             Thank you for your purchase. We have received your order and are preparing it for shipment.
                         </p>
@@ -146,6 +164,83 @@ const CheckoutPage = () => {
             </div>
         );
     }
+
+    // EMPTY CART
+    if (cartItems.length === 0) {
+        return (
+            <div className="bg-[#FAF9F6] min-h-screen pt-28 pb-40 font-outfit flex flex-col items-center justify-center">
+                <div className="text-center space-y-6">
+                    <p className="text-[14px] font-bold uppercase tracking-widest text-gray-400">Your cart is empty</p>
+                    <Link href="/products" className="btn-animate inline-block px-10 py-5 bg-black text-white text-[10px] font-black uppercase tracking-[0.3em] rounded-full shadow-lg">
+                        Browse Products
+                    </Link>
+                </div>
+            </div>
+        );
+    }
+
+    // RENDER CARD PAYMENT SECTION
+    const renderCardPayment = () => {
+        if (clientSecret) {
+            return (
+                <Elements 
+                    stripe={stripePromise} 
+                    options={{ 
+                        clientSecret,
+                        appearance: STRIPE_APPEARANCE,
+                        loader: 'never',
+                    }}
+                >
+                    <StripePaymentForm 
+                        amount={getCartTotal()} 
+                        onSuccess={() => {
+                            setIsOrdered(true);
+                            clearCart();
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
+                        onLoading={setLoading}
+                    />
+                </Elements>
+            );
+        }
+        
+        if (paymentError) {
+            return (
+                <div className="flex flex-col items-center justify-center py-20 bg-white border border-gray-100 rounded-2xl text-center px-4">
+                    <p className="text-[12px] font-bold uppercase tracking-widest text-red-500 mb-2">Payment Error</p>
+                    <p className="text-[10px] text-gray-400">{paymentError}</p>
+                </div>
+            );
+        }
+
+        return (
+            <div className="flex flex-col items-center justify-center py-20 bg-white border border-gray-100 rounded-2xl text-center px-4">
+                <Loader2 className="w-8 h-8 animate-spin text-gray-200 mb-4" />
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Initializing Secure Gateway...</p>
+            </div>
+        );
+    };
+
+    // RENDER COD SECTION
+    const renderCodPayment = () => {
+        return (
+            <div className="h-full p-10 bg-gray-50 border border-dashed border-gray-100 rounded-2xl flex flex-col items-center justify-center text-center space-y-6 animate-in fade-in duration-300">
+                <div className="w-20 h-20 bg-white border border-gray-100 rounded-full flex items-center justify-center shadow-sm">
+                    <Banknote size={32} className="text-black" />
+                </div>
+                <div className="space-y-3">
+                    <p className="text-[16px] font-black uppercase tracking-widest text-black">Cash on Delivery Info</p>
+                    <p className="text-[11px] font-medium text-gray-400 max-w-sm leading-relaxed uppercase tracking-widest">
+                        You have chosen to pay upon receipt. Please prepare the total of <span className="text-black font-black">${getCartTotal()}</span> for when our concierge arrives.
+                    </p>
+                </div>
+                <div className="flex items-center gap-3 px-8 py-4 bg-white border border-gray-100 rounded-full text-[10px] font-black text-black uppercase tracking-[0.2em] shadow-sm">
+                    <ShieldCheck size={16} className="text-green-500" />
+                    Verified Transaction
+                </div>
+            </div>
+        );
+    };
 
     return (
         <div className="bg-[#FAF9F6] min-h-screen pt-28 pb-40 font-outfit">
@@ -187,7 +282,6 @@ const CheckoutPage = () => {
                             <div className="space-y-8">
                                 <p className="text-[14px] font-medium uppercase tracking-[0.4em] text-black/30">Step 02 / Payment Mode</p>
                                 
-                                {/* Method Buttons */}
                                 <div className="flex flex-col sm:flex-row gap-4">
                                     <button 
                                         type="button"
@@ -207,93 +301,13 @@ const CheckoutPage = () => {
                                     </button>
                                 </div>
 
-                                {/* Payment Content */}
+                                {/* PAYMENT CONTENT */}
                                 <div className="min-h-[300px] mt-8">
-                                    {paymentMethod === 'card' ? (
-                                        <div className="animate-in fade-in duration-300">
-                                            {clientSecret ? (
-                                                <Elements 
-                                                    stripe={stripePromise} 
-                                                    options={{ 
-                                                        clientSecret,
-                                                        appearance: {
-                                                            theme: 'stripe',
-                                                            variables: {
-                                                                colorPrimary: '#000000',
-                                                                colorBackground: '#ffffff',
-                                                                colorText: '#000000',
-                                                                colorDanger: '#ef4444',
-                                                                fontFamily: 'system-ui, sans-serif',
-                                                                borderRadius: '10px',
-                                                                fontSizeBase: '14px',
-                                                            },
-                                                            rules: {
-                                                                '.Input': {
-                                                                    border: '1.5px solid #d1d5db',
-                                                                    boxShadow: 'none',
-                                                                    padding: '12px 14px',
-                                                                    backgroundColor: '#ffffff',
-                                                                },
-                                                                '.Input:focus': {
-                                                                    border: '1.5px solid #000000',
-                                                                    boxShadow: '0 0 0 1px #000000',
-                                                                },
-                                                                '.Label': {
-                                                                    fontWeight: '600',
-                                                                    fontSize: '12px',
-                                                                    textTransform: 'uppercase',
-                                                                    letterSpacing: '0.05em',
-                                                                    color: '#374151',
-                                                                    marginBottom: '6px',
-                                                                },
-                                                            }
-                                                        },
-                                                        loader: 'never',
-                                                    }}
-                                                >
-                                                <StripePaymentForm 
-                                                    amount={getCartTotal()} 
-                                                    onSuccess={() => {
-                                                            setIsOrdered(true);
-                                                            clearCart();
-                                                            window.scrollTo({ top: 0, behavior: 'smooth' });
-                                                        }}
-                                                        onLoading={setLoading}
-                                                    />
-                                                </Elements>
-                                            ) : paymentError ? (
-                                                <div className="flex flex-col items-center justify-center py-20 bg-white border border-gray-100 rounded-2xl text-center px-4">
-                                                    <p className="text-[12px] font-bold uppercase tracking-widest text-red-500 mb-2">Payment Error</p>
-                                                    <p className="text-[10px] text-gray-400">{paymentError}</p>
-                                                </div>
-                                            ) : (
-                                                <div className="flex flex-col items-center justify-center py-20 bg-white border border-gray-100 rounded-2xl text-center px-4">
-                                                    <Loader2 className="w-8 h-8 animate-spin text-gray-200 mb-4" />
-                                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Initializing Secure Gateway...</p>
-                                                </div>
-                                            )}
-                                        </div>
-                                    ) : (
-                                        <div className="h-full p-10 bg-gray-50 border border-dashed border-gray-100 rounded-2xl flex flex-col items-center justify-center text-center space-y-6 animate-in fade-in duration-300">
-                                            <div className="w-20 h-20 bg-white border border-gray-100 rounded-full flex items-center justify-center shadow-sm">
-                                                <Banknote size={32} className="text-black" />
-                                            </div>
-                                            <div className="space-y-3">
-                                                <p className="text-[16px] font-black uppercase tracking-widest text-black">Cash on Delivery Info</p>
-                                                <p className="text-[11px] font-medium text-gray-400 max-w-sm leading-relaxed uppercase tracking-widest">
-                                                    You have chosen to pay upon receipt. Please prepare the total of <span className="text-black font-black">${getCartTotal()}</span> for when our concierge arrives.
-                                                </p>
-                                            </div>
-                                            <div className="flex items-center gap-3 px-8 py-4 bg-white border border-gray-100 rounded-full text-[10px] font-black text-black uppercase tracking-[0.2em] shadow-sm">
-                                                <ShieldCheck size={16} className="text-green-500" />
-                                                Verified Transaction
-                                            </div>
-                                        </div>
-                                    )}
+                                    {paymentMethod === 'card' ? renderCardPayment() : renderCodPayment()}
                                 </div>
                             </div>
 
-                            {/* COD Submit Button */}
+                            {/* COD Submit */}
                             {paymentMethod === 'cod' && (
                                 <div className="flex justify-center pt-10">
                                     <button 
@@ -306,11 +320,10 @@ const CheckoutPage = () => {
                                     </button>
                                 </div>
                             )}
-
                         </form>
                     </div>
 
-                    {/* RIGHT: ORDER SUMMARY */}
+                    {/* RIGHT: SUMMARY */}
                     <div className="lg:col-span-4 lg:sticky lg:top-32">
                         <div className="bg-white border border-gray-100 p-12 space-y-12 rounded-3xl shadow-sm">
                             <h3 className="text-[10px] font-black uppercase tracking-[0.5em] text-gray-300 border-b border-gray-50 pb-8 text-center">Summary</h3>

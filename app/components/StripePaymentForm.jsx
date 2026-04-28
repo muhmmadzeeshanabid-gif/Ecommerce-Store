@@ -40,7 +40,7 @@ const StripePaymentForm = ({ amount, onSuccess, onLoading }) => {
             layout: {
               type: 'accordion',
               defaultCollapsed: false,
-              radios: false,
+              radios: 'never',
               spacedAccordionItems: false,
             },
             paymentMethodOrder: ['card'],
