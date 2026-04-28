@@ -19,16 +19,31 @@ const StripePaymentForm = ({ amount, onSuccess, onLoading }) => {
 
     const { error, paymentIntent } = await stripe.confirmPayment({
       elements,
-      confirmParams: {},
+      confirmParams: {
+        // You can add more params here if needed
+      },
       redirect: "if_required",
     });
 
     if (error) {
+      console.error("Payment Confirmation Error:", error);
       setErrorMessage(error.message);
       setIsProcessing(false);
       onLoading(false);
-    } else if (paymentIntent && paymentIntent.status === "succeeded") {
-      onSuccess();
+    } else if (paymentIntent) {
+      console.log("Payment Intent Status:", paymentIntent.status);
+      if (paymentIntent.status === "succeeded") {
+        onSuccess();
+      } else if (paymentIntent.status === "processing") {
+        // For some methods like Bank, it might take time
+        setErrorMessage("Your payment is processing. We will update you once it's confirmed.");
+        setIsProcessing(false);
+        onLoading(false);
+      } else {
+        setErrorMessage("Payment failed or requires further action. Status: " + paymentIntent.status);
+        setIsProcessing(false);
+        onLoading(false);
+      }
     }
   };
 
