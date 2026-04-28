@@ -79,6 +79,22 @@ const STRIPE_APPEARANCE = {
             color: '#374151',
             marginBottom: '6px',
         },
+        '.Tab': {
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '10px',
+            padding: '12px 16px',
+        },
+        '.TabIcon': {
+            marginBottom: '0px', // Remove default bottom margin from icon
+        },
+        '.TabLabel': {
+            marginTop: '0px', // Remove default top margin from label
+            fontWeight: '700',
+            fontSize: '13px',
+        }
     }
 };
 
