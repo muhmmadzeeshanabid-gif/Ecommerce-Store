@@ -6,9 +6,9 @@ export async function POST(request) {
     const { amount } = await request.json();
 
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(amount * 100), // Stripe expects amount in cents
+      amount: Math.round(amount * 100),
       currency: "usd",
-      automatic_payment_methods: { enabled: true },
+      payment_method_types: ['card', 'us_bank_account', 'cashapp', 'amazon_pay'],
     });
 
     return NextResponse.json({ clientSecret: paymentIntent.client_secret });
