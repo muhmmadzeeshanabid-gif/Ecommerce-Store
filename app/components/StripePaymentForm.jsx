@@ -21,13 +21,6 @@ const StripePaymentForm = ({ amount, onSuccess, onLoading }) => {
       elements,
       confirmParams: {
         return_url: window.location.origin + "/checkout?success=true",
-        payment_method_data: {
-          billing_details: {
-            address: {
-              country: 'US', // Default country since field is hidden
-            }
-          }
-        }
       },
       redirect: "if_required",
     });
@@ -39,13 +32,11 @@ const StripePaymentForm = ({ amount, onSuccess, onLoading }) => {
       onLoading(false);
     } else if (paymentIntent) {
       console.log("Payment Intent Status:", paymentIntent.status);
-      if (paymentIntent.status === "succeeded") {
+      if (paymentIntent.status === "succeeded" || paymentIntent.status === "processing") {
+        console.log("Payment successful/processing. Triggering success callback...");
         onSuccess();
-      } else if (paymentIntent.status === "processing") {
-        // Redirect to a success page or show success if it's processing
-        onSuccess(); 
       } else {
-        setErrorMessage("Payment status: " + paymentIntent.status + ". Please check your account.");
+        setErrorMessage("Payment failed with status: " + paymentIntent.status);
         setIsProcessing(false);
         onLoading(false);
       }
@@ -65,14 +56,6 @@ const StripePaymentForm = ({ amount, onSuccess, onLoading }) => {
               applePay: 'never',
               googlePay: 'never',
             },
-            fields: {
-              billingDetails: {
-                address: {
-                  country: 'never',
-                  postalCode: 'never',
-                }
-              }
-            }
           }}
         />
       </div>
