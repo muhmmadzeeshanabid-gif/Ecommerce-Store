@@ -278,9 +278,8 @@ const CheckoutPage = () => {
                         <ChevronLeft size={16} /> Bag
                     </Link>
                     <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter text-black">Checkout</h2>
-                    <div className="hidden md:flex items-center gap-2">
-                        <ShieldCheck size={18} className="text-black" />
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-black">Encrypted Payment</span>
+                    <div className="hidden md:flex items-center gap-2 opacity-0 pointer-events-none">
+                        {/* Hidden to maintain layout balance, moved to summary */}
                     </div>
                 </div>
 
@@ -312,18 +311,18 @@ const CheckoutPage = () => {
                                     <button 
                                         type="button"
                                         onClick={() => setPaymentMethod('card')}
-                                        className={`flex-1 flex items-center justify-center gap-4 py-8 border transition-all rounded-2xl ${paymentMethod === 'card' ? 'border-black bg-black text-white shadow-2xl scale-[1.02]' : 'border-gray-100 bg-white text-gray-400 hover:border-black'}`}
+                                        className={`flex-1 flex items-center justify-center gap-4 py-5 border transition-all rounded-2xl ${paymentMethod === 'card' ? 'border-black bg-black text-white shadow-xl scale-[1.02]' : 'border-gray-100 bg-white text-gray-400 hover:border-black'}`}
                                     >
-                                        <CreditCard size={24} />
-                                        <span className="text-[12px] font-black uppercase tracking-[0.2em] leading-none">Card Payment</span>
+                                        <CreditCard size={20} />
+                                        <span className="text-[11px] font-black uppercase tracking-[0.2em] leading-none">Card Payment</span>
                                     </button>
                                     <button 
                                         type="button"
                                         onClick={() => setPaymentMethod('cod')}
-                                        className={`flex-1 flex items-center justify-center gap-4 py-8 border transition-all rounded-2xl ${paymentMethod === 'cod' ? 'border-black bg-black text-white shadow-2xl scale-[1.02]' : 'border-gray-100 bg-white text-gray-400 hover:border-black'}`}
+                                        className={`flex-1 flex items-center justify-center gap-4 py-5 border transition-all rounded-2xl ${paymentMethod === 'cod' ? 'border-black bg-black text-white shadow-xl scale-[1.02]' : 'border-gray-100 bg-white text-gray-400 hover:border-black'}`}
                                     >
-                                        <Banknote size={24} />
-                                        <span className="text-[12px] font-black uppercase tracking-[0.2em] leading-none">Cash on Delivery</span>
+                                        <Banknote size={20} />
+                                        <span className="text-[11px] font-black uppercase tracking-[0.2em] leading-none">Cash on Delivery</span>
                                     </button>
                                 </div>
 
@@ -339,9 +338,9 @@ const CheckoutPage = () => {
                                     <button 
                                         type="submit"
                                         disabled={loading}
-                                        className="btn-animate px-10 py-4 bg-black text-white text-[10px] font-black uppercase tracking-[0.4em] hover:bg-neutral-800 transition-all shadow-xl active:scale-95 flex items-center justify-center gap-4 rounded-full w-full md:w-auto"
+                                        className="w-full md:w-auto md:min-w-[280px] btn-animate px-10 py-3.5 bg-black text-white text-[12px] font-black uppercase tracking-[0.3em] hover:bg-neutral-800 transition-all shadow-xl active:scale-95 flex items-center justify-center gap-4 rounded-full"
                                     >
-                                        {loading ? 'Processing...' : 'Place Order Now'}
+                                        {loading ? 'Processing...' : 'Pay Now'}
                                         {!loading && <ArrowRight size={16} />}
                                     </button>
                                 </div>
@@ -400,12 +399,17 @@ const CheckoutPage = () => {
                             </div>
                         </div>
 
-                        {/* TRUST BADGE */}
-                        <div className="mt-6 flex items-center justify-center gap-4 text-gray-300">
-                            <div className="h-px flex-1 bg-gray-100"></div>
-                            <ShieldCheck size={14} />
-                            <span className="text-[9px] font-black uppercase tracking-[0.3em]">Secure Transaction</span>
-                            <div className="h-px flex-1 bg-gray-100"></div>
+                        {/* TRUST BADGE (MOVED HERE) */}
+                        <div className="mt-6 flex flex-col items-center gap-4">
+                            <div className="flex items-center gap-3 text-black">
+                                <ShieldCheck size={18} strokeWidth={2.5} />
+                                <span className="text-[10px] font-black uppercase tracking-[0.3em]">Encrypted Payment</span>
+                            </div>
+                            <div className="flex items-center gap-4 w-full text-gray-100">
+                                <div className="h-px flex-1 bg-gray-100"></div>
+                                <span className="text-[8px] font-bold uppercase tracking-[0.3em] text-gray-200 text-center">Your security is our priority</span>
+                                <div className="h-px flex-1 bg-gray-100"></div>
+                            </div>
                         </div>
                     </div>
 
