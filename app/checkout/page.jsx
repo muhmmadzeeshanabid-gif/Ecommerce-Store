@@ -339,35 +339,35 @@ const CheckoutPage = () => {
                                     <button 
                                         type="submit"
                                         disabled={loading}
-                                        className="btn-animate px-14 py-6 bg-black text-white text-[10px] font-black uppercase tracking-[0.4em] hover:bg-neutral-800 transition-all shadow-2xl active:scale-95 flex items-center justify-center gap-4 rounded-full w-full md:w-auto"
+                                        className="btn-animate px-10 py-4 bg-black text-white text-[10px] font-black uppercase tracking-[0.4em] hover:bg-neutral-800 transition-all shadow-xl active:scale-95 flex items-center justify-center gap-4 rounded-full w-full md:w-auto"
                                     >
                                         {loading ? 'Processing...' : 'Place Order Now'}
-                                        {!loading && <ArrowRight size={18} />}
+                                        {!loading && <ArrowRight size={16} />}
                                     </button>
                                 </div>
                             )}
                         </form>
                     </div>
 
-                    {/* RIGHT: SUMMARY */}
+                    {/* RIGHT: SUMMARY (INVOICE STYLE) */}
                     <div className="lg:col-span-4 lg:sticky lg:top-32">
-                        <div className="bg-white border border-gray-100 p-12 space-y-12 rounded-3xl shadow-sm">
-                            <h3 className="text-[10px] font-black uppercase tracking-[0.5em] text-gray-300 border-b border-gray-50 pb-8 text-center">Summary</h3>
+                        <div className="bg-white border border-gray-100 p-10 space-y-10 rounded-[32px] shadow-sm">
+                            <div className="space-y-2 text-center pb-6 border-b border-gray-50">
+                                <h3 className="text-[11px] font-black uppercase tracking-[0.4em] text-black">Order Summary</h3>
+                                <p className="text-[9px] font-bold text-gray-300 uppercase tracking-widest">Premium Logistics & Secure Checkout</p>
+                            </div>
                             
-                            <div className="space-y-8 max-h-[300px] overflow-y-auto no-scrollbar">
+                            <div className="space-y-6 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
                                 {cartItems.map((item) => (
-                                    <div key={item.id} className="flex gap-6 group">
-                                        <div className="w-20 h-28 bg-gray-50 overflow-hidden flex-shrink-0 rounded-xl">
+                                    <div key={item.id} className="flex gap-5 group">
+                                        <div className="w-16 h-20 bg-[#F9F9F9] overflow-hidden flex-shrink-0 rounded-xl border border-gray-50">
                                             <img src={item.thumbnail || item.images?.[0]} className="w-full h-full object-cover transition-transform group-hover:scale-110 duration-700" />
                                         </div>
-                                        <div className="flex flex-col justify-between py-1">
-                                            <div>
-                                                <p className="text-[11px] font-black text-black uppercase leading-[1.1] tracking-tight">{item.title}</p>
-                                                <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest mt-2">{item.brand}</p>
-                                            </div>
-                                            <div className="flex justify-between items-center w-full">
-                                                <span className="text-[10px] text-gray-400 font-bold">QTY {item.quantity}</span>
-                                                <span className="text-[13px] font-black text-black">${(item.price * item.quantity).toFixed(2)}</span>
+                                        <div className="flex flex-col justify-center flex-1">
+                                            <p className="text-[10px] font-black text-black uppercase tracking-tight leading-tight">{item.title}</p>
+                                            <div className="flex justify-between items-center mt-3">
+                                                <span className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">Qty {item.quantity}</span>
+                                                <span className="text-[12px] font-black text-black">${(item.price * item.quantity).toFixed(2)}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -375,19 +375,37 @@ const CheckoutPage = () => {
                             </div>
 
                             <div className="space-y-4 pt-8 border-t border-gray-50">
-                                <div className="flex justify-between items-center text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                                <div className="flex justify-between items-center text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">
                                     <span>Subtotal</span>
-                                    <span className="text-black">${getCartTotal()}</span>
+                                    <span className="text-black font-black">${getCartTotal()}</span>
                                 </div>
-                                <div className="flex justify-between items-center text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                                    <span>Logistics</span>
-                                    <span className="text-green-500 font-black">Free</span>
+                                <div className="flex justify-between items-center text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">
+                                    <span>Shipping</span>
+                                    <span className="text-green-500 font-black">Complimentary</span>
                                 </div>
-                                <div className="flex justify-between items-center pt-8 mt-6 border-t border-black">
-                                    <span className="text-[11px] font-black uppercase tracking-[0.3em] text-black">Final Due</span>
-                                    <span className="text-4xl font-black text-black tracking-tighter">${getCartTotal()}</span>
+                                <div className="flex justify-between items-center text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">
+                                    <span>Taxes</span>
+                                    <span className="text-black font-black">$0.00</span>
+                                </div>
+                                
+                                <div className="pt-8 mt-6 border-t border-black">
+                                    <div className="flex justify-between items-end">
+                                        <div className="space-y-1">
+                                            <span className="block text-[10px] font-black uppercase tracking-[0.3em] text-black">Total Amount</span>
+                                            <span className="block text-[8px] font-bold text-gray-300 uppercase tracking-widest">All inclusive</span>
+                                        </div>
+                                        <span className="text-4xl font-black text-black tracking-tighter leading-none">${getCartTotal()}</span>
+                                    </div>
                                 </div>
                             </div>
+                        </div>
+
+                        {/* TRUST BADGE */}
+                        <div className="mt-6 flex items-center justify-center gap-4 text-gray-300">
+                            <div className="h-px flex-1 bg-gray-100"></div>
+                            <ShieldCheck size={14} />
+                            <span className="text-[9px] font-black uppercase tracking-[0.3em]">Secure Transaction</span>
+                            <div className="h-px flex-1 bg-gray-100"></div>
                         </div>
                     </div>
 

@@ -67,9 +67,9 @@ const StripePaymentForm = ({ amount, onSuccess, onLoading }) => {
         id="stripe-submit-button"
         onClick={handleSubmit}
         disabled={!stripe || isProcessing}
-        className="w-full btn-animate px-14 py-6 bg-black text-white text-[10px] font-black uppercase tracking-[0.4em] hover:bg-neutral-800 transition-all shadow-2xl active:scale-95 flex items-center justify-center gap-4 rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full btn-animate px-8 py-4 bg-black text-white text-[10px] font-black uppercase tracking-[0.4em] hover:bg-neutral-800 transition-all shadow-xl active:scale-95 flex items-center justify-center gap-4 rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {isProcessing ? "Processing..." : `Pay $${amount} Securely`}
+        {isProcessing ? "Processing..." : "Pay Securely"}
       </button>
     </div>
   );
