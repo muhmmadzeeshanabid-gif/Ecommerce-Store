@@ -92,9 +92,11 @@ const CheckoutPage = () => {
     const intentCreated = React.useRef(false);
 
     React.useEffect(() => {
-        if (intentCreated.current) return;
         const total = getCartTotal();
-        if (total > 0) {
+        console.log("CheckoutPage: Current total is", total);
+        
+        if (total > 0 && !intentCreated.current) {
+            console.log("CheckoutPage: Initiating payment intent creation...");
             intentCreated.current = true;
             fetch("/api/create-payment-intent", {
                 method: "POST",
@@ -103,23 +105,25 @@ const CheckoutPage = () => {
             })
             .then(async (res) => {
                 const data = await res.json();
+                console.log("CheckoutPage: API Response", data);
                 if (!res.ok) throw new Error(data.error || 'Failed to initialize payment');
                 return data;
             })
             .then((data) => {
                 if (data.clientSecret) {
+                    console.log("CheckoutPage: Client secret received successfully");
                     setClientSecret(data.clientSecret);
                 } else {
                     throw new Error('No client secret received');
                 }
             })
             .catch((err) => {
-                console.error("Error fetching stripe secret:", err);
+                console.error("CheckoutPage: Error fetching stripe secret:", err);
                 intentCreated.current = false;
                 setPaymentError(err.message);
             });
         }
-    }, []);
+    }, [cartItems, getCartTotal]);
 
     const cities = [
         "Lahore", "Karachi", "Islamabad", "Rawalpindi", "Faisalabad", 
