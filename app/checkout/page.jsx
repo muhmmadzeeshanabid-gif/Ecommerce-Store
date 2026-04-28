@@ -3,7 +3,12 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useCart } from '../context/CartContext';
-import { ChevronLeft, CreditCard, Banknote, ShieldCheck, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { ChevronLeft, CreditCard, Banknote, ShieldCheck, ArrowRight, CheckCircle2, Loader2 } from 'lucide-react';
+import { loadStripe } from "@stripe/stripe-js";
+import { Elements } from "@stripe/react-stripe-js";
+import StripePaymentForm from '../components/StripePaymentForm';
+
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 
 const FloatingInput = ({ label, type = "text", required = true }) => {
     return (
@@ -26,9 +31,10 @@ const FloatingSelect = ({ label, options, required = true }) => {
         <div className="relative group">
             <select 
                 required={required}
+                defaultValue=""
                 className="block px-6 py-5 w-full text-[13px] font-medium text-black bg-white border border-gray-100 appearance-none focus:outline-none focus:ring-0 focus:border-black peer transition-all duration-300 rounded-lg"
             >
-                <option value="" disabled selected className="text-gray-200">Select City</option>
+                <option value="" disabled className="text-gray-200">Select City</option>
                 {options.map((option, idx) => (
                     <option key={idx} value={option} className="text-black font-medium">{option}</option>
                 ))}
@@ -48,6 +54,21 @@ const CheckoutPage = () => {
     const [loading, setLoading] = useState(false);
     const [paymentMethod, setPaymentMethod] = useState('card');
     const [isOrdered, setIsOrdered] = useState(false);
+    const [clientSecret, setClientSecret] = useState("");
+
+    React.useEffect(() => {
+        const total = getCartTotal();
+        if (total > 0) {
+            fetch("/api/create-payment-intent", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ amount: total }),
+            })
+            .then((res) => res.json())
+            .then((data) => setClientSecret(data.clientSecret))
+            .catch((err) => console.error("Error fetching stripe secret:", err));
+        }
+    }, [cartItems]);
 
     const cities = [
         "Lahore", "Karachi", "Islamabad", "Rawalpindi", "Faisalabad", 
@@ -169,12 +190,36 @@ const CheckoutPage = () => {
                                 {/* CONSISTENT HEIGHT FOR PAYMENT BOXES */}
                                 <div className="min-h-[300px] mt-8">
                                     {paymentMethod === 'card' ? (
-                                        <div className="space-y-8 animate-in fade-in duration-500">
-                                            <FloatingInput label="Secure Card Number" />
-                                            <div className="grid grid-cols-2 gap-8">
-                                                <FloatingInput label="Expiry MM/YY" />
-                                                <FloatingInput label="CVV Code" />
-                                            </div>
+                                        <div className="animate-in fade-in duration-500">
+                                            {clientSecret ? (
+                                                <Elements 
+                                                    stripe={stripePromise} 
+                                                    options={{ 
+                                                        clientSecret,
+                                                        appearance: {
+                                                            theme: 'stripe',
+                                                            variables: {
+                                                                colorPrimary: '#000000',
+                                                            }
+                                                        }
+                                                    }}
+                                                >
+                                                    <StripePaymentForm 
+                                                        amount={getCartTotal()} 
+                                                        onSuccess={() => {
+                                                            setIsOrdered(true);
+                                                            clearCart();
+                                                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                                                        }}
+                                                        onLoading={setLoading}
+                                                    />
+                                                </Elements>
+                                            ) : (
+                                                <div className="flex flex-col items-center justify-center py-20 bg-white border border-gray-100 rounded-2xl">
+                                                    <Loader2 className="w-8 h-8 animate-spin text-gray-200 mb-4" />
+                                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Initializing Secure Gateway...</p>
+                                                </div>
+                                            )}
                                         </div>
                                     ) : (
                                         <div className="h-full p-10 bg-gray-50 border border-gray-100 rounded-2xl flex flex-col items-center justify-center text-center space-y-6 animate-in fade-in duration-500 border-dashed">
@@ -196,16 +241,19 @@ const CheckoutPage = () => {
                                 </div>
                             </div>
 
-                            {/* PLACE ORDER BUTTON */}
-                            <div className="flex justify-center pt-10">
-                                <button 
-                                    disabled={loading}
-                                    className="btn-animate px-14 py-6 bg-black text-white text-[10px] font-black uppercase tracking-[0.4em] hover:bg-neutral-800 transition-all shadow-2xl active:scale-95 flex items-center justify-center gap-4 rounded-full w-full md:w-auto"
-                                >
-                                    {loading ? 'Processing Acquisition...' : 'Place Order Now'}
-                                    {!loading && <ArrowRight size={18} />}
-                                </button>
-                            </div>
+                            {/* PLACE ORDER BUTTON (ONLY FOR COD) */}
+                            {paymentMethod === 'cod' && (
+                                <div className="flex justify-center pt-10">
+                                    <button 
+                                        type="submit"
+                                        disabled={loading}
+                                        className="btn-animate px-14 py-6 bg-black text-white text-[10px] font-black uppercase tracking-[0.4em] hover:bg-neutral-800 transition-all shadow-2xl active:scale-95 flex items-center justify-center gap-4 rounded-full w-full md:w-auto"
+                                    >
+                                        {loading ? 'Processing Acquisition...' : 'Place Order Now'}
+                                        {!loading && <ArrowRight size={18} />}
+                                    </button>
+                                </div>
+                            )}
 
                         </form>
                     </div>

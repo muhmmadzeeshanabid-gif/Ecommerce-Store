@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Store, ShoppingCart, User, Menu, X, LogIn, UserPlus, Mail, Lock, UserCircle, ChevronDown, Heart } from 'lucide-react';
+import { Store, ShoppingCart, User, Menu, X, LogIn, UserPlus, Mail, Lock, UserCircle, ChevronDown, Heart, Eye, EyeOff, HelpCircle } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { fetchApi } from '../lib/api';
@@ -11,13 +11,36 @@ import { fetchApi } from '../lib/api';
 const Header = () => {
   const pathname = usePathname();
   const { getCartCount, notification, setNotification, wishlistItems } = useCart();
-  const { user, login, signup, logout, showAuthModal, openAuthModal, closeAuthModal } = useAuth();
+  const { user, login, signup, resetPassword, logout, showAuthModal, openAuthModal, closeAuthModal } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(true);
+  const [isSignUp, setIsSignUp] = useState(false); // Default to login
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [forgotStep, setForgotStep] = useState(1); // 1: Email, 2: Security Questions + New Password
+  const [showPassword, setShowPassword] = useState(false);
+  const [userSecurityQuestions, setUserSecurityQuestions] = useState([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [categories, setCategories] = useState([]);
   const [authError, setAuthError] = useState("");
+  const [authSuccess, setAuthSuccess] = useState("");
   const [isAuthLoading, setIsAuthLoading] = useState(false);
+
+  const securityQuestionsList = [
+    "What was your childhood nickname?",
+    "What is the name of your favorite childhood friend?",
+    "In what city or town did your parents meet?",
+    "What is the middle name of your oldest sibling?",
+    "What is the name of the first beach you visited?",
+    "What was the name of your first stuffed animal?",
+    "What is your favorite movie?",
+    "What is the name of the street you grew up on?",
+    "What is your favorite food?",
+    "What is the name of your first employer?",
+    "What was your dream job as a child?",
+    "What was the first concert you attended?",
+    "What is the name of your favorite teacher?",
+    "What is the name of your first pet?",
+    "What is your grandmother's first name?"
+  ];
 
   useEffect(() => {
     const fetchCats = async () => {
@@ -34,19 +57,59 @@ const Header = () => {
   const handleAuth = async (e) => {
     e.preventDefault();
     setAuthError("");
+    setAuthSuccess("");
     setIsAuthLoading(true);
 
     const email = e.target.email.value;
-    const password = e.target.password.value;
+    const password = e.target.password?.value;
+    const confirmPassword = e.target.confirmPassword?.value;
     const name = e.target.name?.value;
+    
+    // Recovery Answers
+    const recoveryAnswer = e.target.recoveryAnswer?.value;
+
+    // Signup Questions/Answers
+    const signupQuestion = e.target.signupQuestion?.value;
+    const signupAnswer = e.target.signupAnswer?.value;
 
     try {
-      if (isSignUp) {
-        await signup(email, password, name);
+      if (isForgotPassword) {
+        if (forgotStep === 1) {
+            // Check if user exists and get their questions
+            const users = JSON.parse(localStorage.getItem('zara_users') || '[]');
+            const found = users.find(u => u.email === email);
+            if (!found) throw new Error("No account found with this email.");
+            
+            if (found.securityQuestions && found.securityQuestions.length > 0) {
+                setUserSecurityQuestions(found.securityQuestions.map(q => q.question));
+                setForgotStep(2);
+            } else {
+                // Legacy users or no questions set
+                setForgotStep(2);
+                setUserSecurityQuestions(["Question (Not set)"]);
+            }
+            setIsAuthLoading(false);
+            return;
+        }
+
+        if (password !== confirmPassword) {
+          throw new Error("Passwords do not match.");
+        }
+        await resetPassword(email, password, [recoveryAnswer]);
+        setAuthSuccess("Password reset successfully! Please login.");
+        setIsForgotPassword(false);
+        setForgotStep(1);
+        setIsSignUp(false);
+      } else if (isSignUp) {
+        const securityData = [
+            { question: signupQuestion, answer: signupAnswer }
+        ];
+        await signup(email, password, name, securityData);
+        closeAuthModal();
       } else {
         await login(email, password);
+        closeAuthModal();
       }
-      closeAuthModal();
     } catch (err) {
       console.error("Auth error:", err);
       setAuthError(err.message);
@@ -225,61 +288,200 @@ const Header = () => {
                  <button onClick={handleLogout} className="w-full bg-black text-white py-5 text-[10px] font-bold uppercase tracking-[0.3em] rounded-full btn-animate">Logout Session</button>
                </div>
              ) : (
-                 <div className="text-center space-y-6 animate-in fade-in zoom-in-95 duration-300">
-                    <div className="space-y-2">
-                       <h4 className="text-2xl font-black uppercase tracking-[0.2em] text-black">
-                         {isSignUp ? "Create Account" : "Welcome Back"}
-                       </h4>
-                       <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">
-                         {isSignUp ? "Join the Zara Fashion Club" : "Login to your account"}
-                       </p>
-                    </div>
+                  <div className="text-center space-y-6 animate-in fade-in zoom-in-95 duration-300">
+                     <div className="space-y-2">
+                        <h4 className="text-2xl font-black uppercase tracking-[0.2em] text-black">
+                          {isForgotPassword ? (forgotStep === 1 ? "Verify Email" : "Reset Password") : (isSignUp ? "Create Account" : "Welcome Back")}
+                        </h4>
+                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">
+                          {isForgotPassword ? (forgotStep === 1 ? "Enter your email to find account" : "Answer security questions to reset") : (isSignUp ? "Join the Zara Fashion Club" : "Login to your account")}
+                        </p>
+                     </div>
  
-                    <form onSubmit={handleAuth} className="space-y-4">
-                       {isSignUp && (
-                         <div className="relative">
-                            <User className={`absolute left-4 top-1/2 -translate-y-1/2 ${authError ? 'text-red-400' : 'text-gray-300'}`} size={16} />
-                            <input type="text" name="name" placeholder="Full Name" className={`w-full bg-gray-50 border ${authError ? 'border-red-200 focus:border-red-500' : 'border-transparent focus:border-black'} p-4 pl-12 text-[11px] font-medium uppercase tracking-widest transition-all outline-none`} required />
-                         </div>
-                       )}
-                       <div className="relative">
-                          <Mail className={`absolute left-4 top-1/2 -translate-y-1/2 ${authError ? 'text-red-400' : 'text-gray-300'}`} size={16} />
-                          <input type="email" name="email" placeholder="Email Address" className={`w-full bg-gray-50 border ${authError ? 'border-red-200 focus:border-red-500' : 'border-transparent focus:border-black'} p-4 pl-12 text-[11px] font-medium uppercase tracking-widest transition-all outline-none`} required />
-                       </div>
-                       <div className="relative">
-                          <Lock className={`absolute left-4 top-1/2 -translate-y-1/2 ${authError ? 'text-red-400' : 'text-gray-300'}`} size={16} />
-                          <input type="password" name="password" placeholder="Password (Min. 8 chars)" minLength="8" className={`w-full bg-gray-50 border ${authError ? 'border-red-200 focus:border-red-500' : 'border-transparent focus:border-black'} p-4 pl-12 text-[11px] font-medium uppercase tracking-widest transition-all outline-none`} required />
-                       </div>
-                       
-                       {authError && (
-                         <div className="bg-red-50 p-3 border-l-4 border-red-500 animate-in fade-in slide-in-from-top-1 duration-300">
-                           <p className="text-[10px] font-medium text-red-600 uppercase tracking-widest text-left">
-                             * {authError}
-                           </p>
-                         </div>
-                       )}
+                     <form onSubmit={handleAuth} className="space-y-4">
+                        {isSignUp && (
+                          <div className="relative">
+                             <User className={`absolute left-4 top-1/2 -translate-y-1/2 ${authError ? 'text-red-400' : 'text-gray-300'}`} size={16} />
+                             <input type="text" name="name" placeholder="Full Name" className={`w-full bg-gray-50 border ${authError ? 'border-red-200 focus:border-red-500' : 'border-transparent focus:border-black'} p-4 pl-12 text-[11px] font-medium uppercase tracking-widest transition-all outline-none`} required />
+                          </div>
+                        )}
+                        
+                        {(isSignUp || !isForgotPassword || (isForgotPassword && forgotStep === 1)) && (
+                          <div className="relative">
+                            <Mail className={`absolute left-4 top-1/2 -translate-y-1/2 ${authError ? 'text-red-400' : 'text-gray-300'}`} size={16} />
+                            <input type="email" name="email" placeholder="Email Address" className={`w-full bg-gray-50 border ${authError ? 'border-red-200 focus:border-red-500' : 'border-transparent focus:border-black'} p-4 pl-12 text-[11px] font-medium uppercase tracking-widest transition-all outline-none`} required readOnly={isForgotPassword && forgotStep === 2} />
+                          </div>
+                        )}
 
-                       <button 
-                         type="submit" 
-                         disabled={isAuthLoading}
-                         className={`w-full bg-black text-white py-5 text-[10px] font-bold uppercase tracking-[0.3em] hover:bg-neutral-800 transition-all shadow-xl active:scale-95 mt-4 rounded-full btn-animate ${isAuthLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
-                       >
-                          {isAuthLoading ? "Processing..." : (isSignUp ? "Sign Up Now" : "Login Session")}
-                       </button>
-                    </form>
+                        {((!isForgotPassword && !isSignUp) || isSignUp) && (
+                          <div className="relative">
+                             <Lock className={`absolute left-4 top-1/2 -translate-y-1/2 ${authError ? 'text-red-400' : 'text-gray-300'}`} size={16} />
+                             <input 
+                               type={showPassword ? "text" : "password"} 
+                               name="password" 
+                               placeholder="Password (Min. 8 chars)" 
+                               minLength="8" 
+                               className={`w-full bg-gray-50 border ${authError ? 'border-red-200 focus:border-red-500' : 'border-transparent focus:border-black'} p-4 pl-12 pr-12 text-[11px] font-medium uppercase tracking-widest transition-all outline-none`} 
+                               required 
+                             />
+                             <button 
+                               type="button"
+                               onClick={() => setShowPassword(!showPassword)}
+                               className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black transition-colors"
+                             >
+                               {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                             </button>
+                          </div>
+                        )}
+
+                        {isForgotPassword && forgotStep === 2 && (
+                          <div className="space-y-4">
+                            <div className="relative">
+                               <Lock className={`absolute left-4 top-1/2 -translate-y-1/2 ${authError ? 'text-red-400' : 'text-gray-300'}`} size={16} />
+                               <input 
+                                 type={showPassword ? "text" : "password"} 
+                                 name="password" 
+                                 placeholder="New Password" 
+                                 minLength="8" 
+                                 className={`w-full bg-gray-50 border ${authError ? 'border-red-200 focus:border-red-500' : 'border-transparent focus:border-black'} p-4 pl-12 pr-12 text-[11px] font-medium uppercase tracking-widest transition-all outline-none`} 
+                                 required 
+                               />
+                               <button 
+                                 type="button"
+                                 onClick={() => setShowPassword(!showPassword)}
+                                 className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black transition-colors"
+                               >
+                                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                               </button>
+                            </div>
+                            <div className="relative">
+                               <Lock className={`absolute left-4 top-1/2 -translate-y-1/2 ${authError ? 'text-red-400' : 'text-gray-300'}`} size={16} />
+                               <input 
+                                 type={showPassword ? "text" : "password"} 
+                                 name="confirmPassword" 
+                                 placeholder="Confirm New Password" 
+                                 minLength="8" 
+                                 className={`w-full bg-gray-50 border ${authError ? 'border-red-200 focus:border-red-500' : 'border-transparent focus:border-black'} p-4 pl-12 pr-12 text-[11px] font-medium uppercase tracking-widest transition-all outline-none`} 
+                                 required 
+                               />
+                            </div>
+
+                            {userSecurityQuestions[0] !== "Question (Not set)" && (
+                              <div className="space-y-4 pt-2">
+                                  <p className="text-[9px] text-left font-black uppercase tracking-widest text-black mb-1">Verify Security Answer:</p>
+                                  <div className="space-y-3">
+                                      <div className="text-left bg-gray-50 p-4 border border-gray-100 rounded-lg">
+                                          <p className="text-[10px] font-black text-black uppercase tracking-[0.1em] mb-2 leading-relaxed">
+                                              {userSecurityQuestions[0]}
+                                          </p>
+                                          <input type="text" name="recoveryAnswer" placeholder="Your Answer" className="w-full bg-transparent border-b border-gray-200 py-2 text-[12px] font-medium outline-none focus:border-black transition-colors" required />
+                                      </div>
+                                  </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {isSignUp && (
+                          <div className="space-y-5 pt-2">
+                             <div className="space-y-4">
+                                <div className="space-y-3">
+                                    <p className="text-[9px] text-left font-black uppercase tracking-widest text-black">Quick Pick Questions:</p>
+                                    <div className="grid grid-cols-1 gap-2">
+                                        {securityQuestionsList.slice(0, 3).map((q, i) => (
+                                            <button 
+                                                key={i} 
+                                                type="button" 
+                                                onClick={() => {
+                                                    const select = document.getElementsByName('signupQuestion')[0];
+                                                    if (select) {
+                                                        select.value = q;
+                                                        // Trigger change for UI if needed
+                                                    }
+                                                }}
+                                                className="text-left p-3 bg-gray-50 hover:bg-black hover:text-white transition-all text-[9px] font-bold uppercase tracking-widest border border-gray-100"
+                                            >
+                                                {q}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <p className="text-[9px] text-left font-black uppercase tracking-widest text-black">Or Select from List:</p>
+                                    <select name="signupQuestion" className="w-full bg-gray-50 border border-transparent p-3 text-[10px] font-bold uppercase tracking-widest outline-none focus:border-black cursor-pointer" required>
+                                        {securityQuestionsList.map((q, i) => <option key={i} value={q}>{q}</option>)}
+                                    </select>
+                                    <div className="relative">
+                                        <HelpCircle className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={16} />
+                                        <input type="text" name="signupAnswer" placeholder="Write Your Answer" className="w-full bg-gray-50 border border-transparent p-4 pl-12 text-[11px] font-medium uppercase tracking-widest outline-none focus:border-black" required />
+                                    </div>
+                                </div>
+                             </div>
+                          </div>
+                        )}
+                        
+                        {authError && (
+                          <div className="bg-red-50 p-3 border-l-4 border-red-500 animate-in fade-in slide-in-from-top-1 duration-300">
+                            <p className="text-[10px] font-medium text-red-600 uppercase tracking-widest text-left">
+                              * {authError}
+                            </p>
+                          </div>
+                        )}
+
+                        {authSuccess && (
+                          <div className="bg-green-50 p-3 border-l-4 border-green-500 animate-in fade-in slide-in-from-top-1 duration-300">
+                            <p className="text-[10px] font-medium text-green-600 uppercase tracking-widest text-left">
+                              {authSuccess}
+                            </p>
+                          </div>
+                        )}
+
+                        <button 
+                          type="submit" 
+                          disabled={isAuthLoading}
+                          className={`w-full bg-black text-white py-5 text-[10px] font-bold uppercase tracking-[0.3em] hover:bg-neutral-800 transition-all shadow-xl active:scale-95 mt-4 rounded-full btn-animate ${isAuthLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                        >
+                           {isAuthLoading ? "Processing..." : (isForgotPassword ? (forgotStep === 1 ? "Find Account" : "Reset Password") : (isSignUp ? "Sign Up Now" : "Login Session"))}
+                        </button>
+                     </form>
  
-                    <div className="pt-4 border-t border-gray-50">
-                       <button 
-                         onClick={() => {
-                           setIsSignUp(!isSignUp);
-                           setAuthError("");
-                         }}
-                         className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-black transition-colors"
-                       >
-                         {isSignUp ? "Already have an account? Login" : "Don't have an account? Create One"}
-                       </button>
-                    </div>
-                 </div>
+                     <div className="flex flex-col gap-3 pt-4 border-t border-gray-50">
+                        {!isForgotPassword && !isSignUp && (
+                          <button 
+                            onClick={() => {
+                              setIsForgotPassword(true);
+                              setForgotStep(1);
+                              setAuthError("");
+                              setAuthSuccess("");
+                            }}
+                            className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-black transition-colors"
+                          >
+                            Forgot Password?
+                          </button>
+                        )}
+
+                        <button 
+                          onClick={() => {
+                            if (isForgotPassword) {
+                                if (forgotStep === 2) {
+                                    setForgotStep(1);
+                                } else {
+                                    setIsForgotPassword(false);
+                                }
+                            } else {
+                              setIsSignUp(!isSignUp);
+                            }
+                            setUserSecurityQuestions([]);
+                            setAuthError("");
+                            setAuthSuccess("");
+                          }}
+                          className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-black transition-colors"
+                        >
+                          {isForgotPassword ? (forgotStep === 2 ? "Back to Email Verification" : "Back to Login") : (isSignUp ? "Already have an account? Login" : "Don't have an account? Create One")}
+                        </button>
+                     </div>
+                  </div>
              )}
            </div>
         </div>

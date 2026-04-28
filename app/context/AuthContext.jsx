@@ -17,7 +17,7 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  const signup = async (email, password, displayName) => {
+  const signup = async (email, password, displayName, securityAnswers = []) => {
     // Simulate a delay
     await new Promise(resolve => setTimeout(resolve, 800));
 
@@ -31,7 +31,8 @@ export const AuthProvider = ({ children }) => {
       uid: Date.now().toString(),
       email, 
       password, 
-      displayName 
+      displayName,
+      securityQuestions: securityAnswers // This will now be an array of {question, answer}
     };
     users.push(newUser);
     localStorage.setItem('zara_users', JSON.stringify(users));
@@ -62,6 +63,40 @@ export const AuthProvider = ({ children }) => {
     return userExists;
   };
 
+  const resetPassword = async (email, newPassword, securityAnswers = []) => {
+    // Simulate a delay
+    await new Promise(resolve => setTimeout(resolve, 800));
+
+    const users = JSON.parse(localStorage.getItem('zara_users') || '[]');
+    const userIndex = users.findIndex(u => u.email === email);
+
+    if (userIndex === -1) {
+      throw new Error("No account found with this email.");
+    }
+
+    const savedUser = users[userIndex];
+    
+    // Verify security answers if they exist
+    if (savedUser.securityQuestions && savedUser.securityQuestions.length > 0) {
+      const match = savedUser.securityQuestions.every((qObj, idx) => 
+        qObj.answer.toLowerCase().trim() === securityAnswers[idx]?.toLowerCase().trim()
+      );
+      if (!match) {
+        throw new Error("Security answers are incorrect.");
+      }
+    }
+
+    users[userIndex].password = newPassword;
+    localStorage.setItem('zara_users', JSON.stringify(users));
+    
+    // If the user being reset is the currently logged-in user, update their session
+    if (user && user.email === email) {
+      const updatedUser = { ...user, password: newPassword };
+      setUser(updatedUser);
+      localStorage.setItem('zara_auth_session', JSON.stringify(updatedUser));
+    }
+  };
+
   const logout = () => {
     setUser(null);
     localStorage.removeItem('zara_auth_session');
@@ -76,6 +111,7 @@ export const AuthProvider = ({ children }) => {
       loading, 
       login, 
       signup, 
+      resetPassword,
       logout, 
       showAuthModal, 
       openAuthModal, 
