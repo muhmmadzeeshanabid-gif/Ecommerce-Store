@@ -56,10 +56,14 @@ const CheckoutPage = () => {
     const [isOrdered, setIsOrdered] = useState(false);
     const [clientSecret, setClientSecret] = useState("");
     const [paymentError, setPaymentError] = useState("");
+    const intentCreated = React.useRef(false);
 
     React.useEffect(() => {
+        // Only create payment intent ONCE — never again on re-renders
+        if (intentCreated.current) return;
         const total = getCartTotal();
         if (total > 0) {
+            intentCreated.current = true;
             fetch("/api/create-payment-intent", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -73,6 +77,7 @@ const CheckoutPage = () => {
             .then((data) => setClientSecret(data.clientSecret))
             .catch((err) => {
                 console.error("Error fetching stripe secret:", err);
+                intentCreated.current = false; // allow retry on error
                 setPaymentError(err.message);
             });
         }
@@ -197,23 +202,18 @@ const CheckoutPage = () => {
 
                                 {/* CONSISTENT HEIGHT FOR PAYMENT BOXES */}
                                 <div className="min-h-[300px] mt-8">
-                                    {paymentMethod === 'card' ? (
-                                        <div className="animate-in fade-in duration-500">
-                                            {clientSecret ? (
-                                                <Elements 
-                                                    stripe={stripePromise} 
-                                                    options={{ 
-                                                        clientSecret,
-                                                        appearance: {
-                                                            theme: 'none',
-                                                            variables: {
-                                                                colorPrimary: '#000000',
-                                                                fontFamily: "'Outfit', system-ui, sans-serif",
-                                                            }
-                                                        },
-                                                        loader: 'never',
-                                                    }}
-                                                >
+                                        {clientSecret ? (
+                                            <Elements 
+                                                stripe={stripePromise} 
+                                                options={{ 
+                                                    clientSecret,
+                                                    appearance: {
+                                                        theme: 'none',
+                                                    },
+                                                    loader: 'never',
+                                                }}
+                                            >
+                                                <div className={paymentMethod === 'card' ? 'block' : 'hidden'}>
                                                     <StripePaymentForm 
                                                         amount={getCartTotal()} 
                                                         clientSecret={clientSecret}
@@ -224,24 +224,23 @@ const CheckoutPage = () => {
                                                         }}
                                                         onLoading={setLoading}
                                                     />
-                                                </Elements>
-                                            ) : (
-                                                <div className="flex flex-col items-center justify-center py-20 bg-white border border-gray-100 rounded-2xl text-center px-4">
-                                                    {paymentError ? (
-                                                        <div className="text-red-500">
-                                                            <p className="text-[12px] font-bold uppercase tracking-widest mb-2">Configuration Error</p>
-                                                            <p className="text-[10px] text-gray-500">{paymentError}</p>
-                                                        </div>
-                                                    ) : (
-                                                        <>
-                                                            <Loader2 className="w-8 h-8 animate-spin text-gray-200 mb-4" />
-                                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Initializing Secure Gateway...</p>
-                                                        </>
-                                                    )}
                                                 </div>
-                                            )}
-                                        </div>
-                                    ) : (
+                                            </Elements>
+                                        ) : (
+                                            <div className={`flex flex-col items-center justify-center py-20 bg-white border border-gray-100 rounded-2xl text-center px-4 ${paymentMethod !== 'card' ? 'hidden' : ''}`}>
+                                                {paymentError ? (
+                                                    <div className="text-red-500">
+                                                        <p className="text-[12px] font-bold uppercase tracking-widest mb-2">Payment Error</p>
+                                                        <p className="text-[10px] text-gray-500">{paymentError}</p>
+                                                    </div>
+                                                ) : (
+                                                    <>
+                                                        <Loader2 className="w-8 h-8 animate-spin text-gray-200 mb-4" />
+                                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Initializing Secure Gateway...</p>
+                                                    </>
+                                                )}
+                                            </div>
+                                        )}
                                         <div className="h-full p-10 bg-gray-50 border border-gray-100 rounded-2xl flex flex-col items-center justify-center text-center space-y-6 animate-in fade-in duration-500 border-dashed">
                                             <div className="w-20 h-20 bg-white border border-gray-100 rounded-full flex items-center justify-center shadow-sm">
                                                 <Banknote size={32} className="text-black" />
