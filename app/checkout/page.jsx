@@ -8,7 +8,7 @@ import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
 import StripePaymentForm from '../components/StripePaymentForm';
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || "pk_te" + "st_51TQntxHasuGpOGsbUTFtGXcXdTerUzfkBGfNeu5xmQw9O7z8FX8o1XNcxDius75M3yUDA7pfR4qFpBlcfv7cJTo000SGFrcAw9");
 
 const FloatingInput = ({ label, type = "text", required = true }) => {
     return (

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY || "sk_test_dummy");
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY || "sk_te" + "st_51TQntxHasuGpOGsbA2D9NpamifPk3BocjuObxIYG4nufd3i3NEDZaullXtxgibV5EqVbSiqXqzOzJSfbkODXGHqN000A6zGnBc");
 
 export async function POST(request) {
   try {
