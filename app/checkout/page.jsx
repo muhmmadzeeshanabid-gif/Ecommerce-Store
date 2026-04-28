@@ -93,11 +93,12 @@ const CheckoutPage = () => {
 
     React.useEffect(() => {
         const total = getCartTotal();
-        console.log("CheckoutPage: Current total is", total);
+        console.log("CheckoutPage: useEffect triggered. Total:", total, "Intent already created:", intentCreated.current);
         
         if (total > 0 && !intentCreated.current) {
-            console.log("CheckoutPage: Initiating payment intent creation...");
+            console.log("CheckoutPage: Creating Payment Intent for amount:", total);
             intentCreated.current = true;
+            
             fetch("/api/create-payment-intent", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -105,25 +106,28 @@ const CheckoutPage = () => {
             })
             .then(async (res) => {
                 const data = await res.json();
-                console.log("CheckoutPage: API Response", data);
+                console.log("CheckoutPage: API Response status:", res.status);
                 if (!res.ok) throw new Error(data.error || 'Failed to initialize payment');
                 return data;
             })
             .then((data) => {
                 if (data.clientSecret) {
-                    console.log("CheckoutPage: Client secret received successfully");
+                    console.log("CheckoutPage: Received clientSecret successfully");
                     setClientSecret(data.clientSecret);
                 } else {
-                    throw new Error('No client secret received');
+                    console.log("CheckoutPage: No clientSecret in response data");
+                    throw new Error('No client secret received from server');
                 }
             })
             .catch((err) => {
-                console.error("CheckoutPage: Error fetching stripe secret:", err);
+                console.error("CheckoutPage: Error in payment flow:", err);
                 intentCreated.current = false;
                 setPaymentError(err.message);
             });
+        } else if (total <= 0) {
+            console.log("CheckoutPage: Total is 0, waiting for cart items...");
         }
-    }, [cartItems, getCartTotal]);
+    }, [cartItems]); // Using only cartItems for stable dependency size
 
     const cities = [
         "Lahore", "Karachi", "Islamabad", "Rawalpindi", "Faisalabad", 
