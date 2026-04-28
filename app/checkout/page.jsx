@@ -59,7 +59,6 @@ const CheckoutPage = () => {
     const intentCreated = React.useRef(false);
 
     React.useEffect(() => {
-        // Only create payment intent ONCE — never again on re-renders
         if (intentCreated.current) return;
         const total = getCartTotal();
         if (total > 0) {
@@ -77,7 +76,7 @@ const CheckoutPage = () => {
             .then((data) => setClientSecret(data.clientSecret))
             .catch((err) => {
                 console.error("Error fetching stripe secret:", err);
-                intentCreated.current = false; // allow retry on error
+                intentCreated.current = false;
                 setPaymentError(err.message);
             });
         }
@@ -103,11 +102,9 @@ const CheckoutPage = () => {
         return (
             <div className="bg-white min-h-[85vh] flex flex-col items-center justify-center py-20 animate-in fade-in duration-700">
                 <div className="max-w-md w-full px-6 flex flex-col items-center text-center space-y-10">
-                    {/* Minimal Success Icon */}
                     <div className="w-16 h-16 border border-black rounded-full flex items-center justify-center">
                         <CheckCircle2 size={24} className="text-black" strokeWidth={1} />
                     </div>
-
                     <div className="space-y-4">
                         <h1 className="text-2xl md:text-3xl font-light text-black uppercase tracking-[0.3em]">
                             Order Confirmed
@@ -116,20 +113,12 @@ const CheckoutPage = () => {
                             Thank you for your purchase. We have received your order and are preparing it for shipment.
                         </p>
                     </div>
-
                     <div className="w-full h-px bg-gray-50"></div>
-
                     <div className="space-y-6 w-full">
-                        <Link 
-                            href="/products" 
-                            className="btn-animate block w-full py-5 bg-black text-white text-[10px] font-bold uppercase tracking-[0.3em] rounded-full shadow-lg"
-                        >
+                        <Link href="/products" className="btn-animate block w-full py-5 bg-black text-white text-[10px] font-bold uppercase tracking-[0.3em] rounded-full shadow-lg">
                             Continue Shopping
                         </Link>
-                        <Link 
-                            href="/" 
-                            className="block text-[9px] font-black uppercase tracking-[0.3em] text-black hover:text-gray-400 transition-colors"
-                        >
+                        <Link href="/" className="block text-[9px] font-black uppercase tracking-[0.3em] text-black hover:text-gray-400 transition-colors">
                             Return Home
                         </Link>
                     </div>
@@ -142,28 +131,25 @@ const CheckoutPage = () => {
         <div className="bg-[#FAF9F6] min-h-screen pt-28 pb-40 font-outfit">
             <div className="container mx-auto px-6 lg:px-20 max-w-7xl">
                 
-                {/* 1. COMPACT NAV */}
+                {/* NAV */}
                 <div className="flex items-center justify-between mb-16 border-b border-gray-100 pb-10">
-                    <Link 
-                        href="/cart" 
-                        className="btn-animate flex items-center gap-3 px-8 py-3.5 bg-black text-white text-[10px] font-black uppercase tracking-[0.3em] transition-all rounded-full shadow-lg"
-                    >
+                    <Link href="/cart" className="btn-animate flex items-center gap-3 px-8 py-3.5 bg-black text-white text-[10px] font-black uppercase tracking-[0.3em] transition-all rounded-full shadow-lg">
                         <ChevronLeft size={16} /> Bag
                     </Link>
                     <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter text-black">Checkout</h2>
                     <div className="hidden md:flex items-center gap-2">
-                         <ShieldCheck size={18} className="text-black" />
-                         <span className="text-[10px] font-black uppercase tracking-[0.2em] text-black">Ecrypted Payment</span>
+                        <ShieldCheck size={18} className="text-black" />
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-black">Encrypted Payment</span>
                     </div>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
                     
-                    {/* LEFT: REFINED FORM */}
+                    {/* LEFT: FORM */}
                     <div className="lg:col-span-8">
                         <form onSubmit={handlePlaceOrder} className="space-y-16">
                             
-                            {/* SHIPPING SECTION */}
+                            {/* SHIPPING */}
                             <div className="space-y-8">
                                 <p className="text-[14px] font-medium uppercase tracking-[0.4em] text-black/30">Step 01 / Shipping Details</p>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -177,10 +163,11 @@ const CheckoutPage = () => {
                                 </div>
                             </div>
 
-                            {/* PAYMENT SECTION */}
+                            {/* PAYMENT */}
                             <div className="space-y-8">
                                 <p className="text-[14px] font-medium uppercase tracking-[0.4em] text-black/30">Step 02 / Payment Mode</p>
                                 
+                                {/* Method Buttons */}
                                 <div className="flex flex-col sm:flex-row gap-4">
                                     <button 
                                         type="button"
@@ -200,20 +187,19 @@ const CheckoutPage = () => {
                                     </button>
                                 </div>
 
-                                {/* CONSISTENT HEIGHT FOR PAYMENT BOXES */}
+                                {/* Payment Content */}
                                 <div className="min-h-[300px] mt-8">
-                                        {clientSecret ? (
-                                            <Elements 
-                                                stripe={stripePromise} 
-                                                options={{ 
-                                                    clientSecret,
-                                                    appearance: {
-                                                        theme: 'none',
-                                                    },
-                                                    loader: 'never',
-                                                }}
-                                            >
-                                                <div className={paymentMethod === 'card' ? 'block' : 'hidden'}>
+                                    {paymentMethod === 'card' ? (
+                                        <div className="animate-in fade-in duration-300">
+                                            {clientSecret ? (
+                                                <Elements 
+                                                    stripe={stripePromise} 
+                                                    options={{ 
+                                                        clientSecret,
+                                                        appearance: { theme: 'none' },
+                                                        loader: 'never',
+                                                    }}
+                                                >
                                                     <StripePaymentForm 
                                                         amount={getCartTotal()} 
                                                         clientSecret={clientSecret}
@@ -224,24 +210,21 @@ const CheckoutPage = () => {
                                                         }}
                                                         onLoading={setLoading}
                                                     />
+                                                </Elements>
+                                            ) : paymentError ? (
+                                                <div className="flex flex-col items-center justify-center py-20 bg-white border border-gray-100 rounded-2xl text-center px-4">
+                                                    <p className="text-[12px] font-bold uppercase tracking-widest text-red-500 mb-2">Payment Error</p>
+                                                    <p className="text-[10px] text-gray-400">{paymentError}</p>
                                                 </div>
-                                            </Elements>
-                                        ) : (
-                                            <div className={`flex flex-col items-center justify-center py-20 bg-white border border-gray-100 rounded-2xl text-center px-4 ${paymentMethod !== 'card' ? 'hidden' : ''}`}>
-                                                {paymentError ? (
-                                                    <div className="text-red-500">
-                                                        <p className="text-[12px] font-bold uppercase tracking-widest mb-2">Payment Error</p>
-                                                        <p className="text-[10px] text-gray-500">{paymentError}</p>
-                                                    </div>
-                                                ) : (
-                                                    <>
-                                                        <Loader2 className="w-8 h-8 animate-spin text-gray-200 mb-4" />
-                                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Initializing Secure Gateway...</p>
-                                                    </>
-                                                )}
-                                            </div>
-                                        )}
-                                        <div className="h-full p-10 bg-gray-50 border border-gray-100 rounded-2xl flex flex-col items-center justify-center text-center space-y-6 animate-in fade-in duration-500 border-dashed">
+                                            ) : (
+                                                <div className="flex flex-col items-center justify-center py-20 bg-white border border-gray-100 rounded-2xl text-center px-4">
+                                                    <Loader2 className="w-8 h-8 animate-spin text-gray-200 mb-4" />
+                                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Initializing Secure Gateway...</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className="h-full p-10 bg-gray-50 border border-dashed border-gray-100 rounded-2xl flex flex-col items-center justify-center text-center space-y-6 animate-in fade-in duration-300">
                                             <div className="w-20 h-20 bg-white border border-gray-100 rounded-full flex items-center justify-center shadow-sm">
                                                 <Banknote size={32} className="text-black" />
                                             </div>
@@ -260,7 +243,7 @@ const CheckoutPage = () => {
                                 </div>
                             </div>
 
-                            {/* PLACE ORDER BUTTON (ONLY FOR COD) */}
+                            {/* COD Submit Button */}
                             {paymentMethod === 'cod' && (
                                 <div className="flex justify-center pt-10">
                                     <button 
@@ -268,7 +251,7 @@ const CheckoutPage = () => {
                                         disabled={loading}
                                         className="btn-animate px-14 py-6 bg-black text-white text-[10px] font-black uppercase tracking-[0.4em] hover:bg-neutral-800 transition-all shadow-2xl active:scale-95 flex items-center justify-center gap-4 rounded-full w-full md:w-auto"
                                     >
-                                        {loading ? 'Processing Acquisition...' : 'Place Order Now'}
+                                        {loading ? 'Processing...' : 'Place Order Now'}
                                         {!loading && <ArrowRight size={18} />}
                                     </button>
                                 </div>
@@ -277,7 +260,7 @@ const CheckoutPage = () => {
                         </form>
                     </div>
 
-                    {/* RIGHT: FLOATING SUMMARY */}
+                    {/* RIGHT: ORDER SUMMARY */}
                     <div className="lg:col-span-4 lg:sticky lg:top-32">
                         <div className="bg-white border border-gray-100 p-12 space-y-12 rounded-3xl shadow-sm">
                             <h3 className="text-[10px] font-black uppercase tracking-[0.5em] text-gray-300 border-b border-gray-50 pb-8 text-center">Summary</h3>
