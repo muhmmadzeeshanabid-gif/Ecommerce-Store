@@ -200,10 +200,9 @@ const CheckoutPage = () => {
                                                         loader: 'never',
                                                     }}
                                                 >
-                                                    <StripePaymentForm 
-                                                        amount={getCartTotal()} 
-                                                        clientSecret={clientSecret}
-                                                        onSuccess={() => {
+                                                <StripePaymentForm 
+                                                    amount={getCartTotal()} 
+                                                    onSuccess={() => {
                                                             setIsOrdered(true);
                                                             clearCart();
                                                             window.scrollTo({ top: 0, behavior: 'smooth' });
