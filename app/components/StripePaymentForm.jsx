@@ -37,7 +37,10 @@ const StripePaymentForm = ({ amount, onSuccess, onLoading }) => {
       <div className="bg-white border border-gray-200 rounded-2xl p-6 md:p-8 shadow-sm">
         <PaymentElement 
           options={{
-            layout: 'tabs',
+            layout: {
+              type: 'tabs',
+              defaultCollapsed: false,
+            },
             wallets: {
               applePay: 'never',
               googlePay: 'never',
