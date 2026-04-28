@@ -55,6 +55,7 @@ const CheckoutPage = () => {
     const [paymentMethod, setPaymentMethod] = useState('card');
     const [isOrdered, setIsOrdered] = useState(false);
     const [clientSecret, setClientSecret] = useState("");
+    const [paymentError, setPaymentError] = useState("");
 
     React.useEffect(() => {
         const total = getCartTotal();
@@ -64,9 +65,16 @@ const CheckoutPage = () => {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ amount: total }),
             })
-            .then((res) => res.json())
+            .then(async (res) => {
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Failed to initialize payment');
+                return data;
+            })
             .then((data) => setClientSecret(data.clientSecret))
-            .catch((err) => console.error("Error fetching stripe secret:", err));
+            .catch((err) => {
+                console.error("Error fetching stripe secret:", err);
+                setPaymentError(err.message);
+            });
         }
     }, [cartItems]);
 
@@ -215,9 +223,18 @@ const CheckoutPage = () => {
                                                     />
                                                 </Elements>
                                             ) : (
-                                                <div className="flex flex-col items-center justify-center py-20 bg-white border border-gray-100 rounded-2xl">
-                                                    <Loader2 className="w-8 h-8 animate-spin text-gray-200 mb-4" />
-                                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Initializing Secure Gateway...</p>
+                                                <div className="flex flex-col items-center justify-center py-20 bg-white border border-gray-100 rounded-2xl text-center px-4">
+                                                    {paymentError ? (
+                                                        <div className="text-red-500">
+                                                            <p className="text-[12px] font-bold uppercase tracking-widest mb-2">Configuration Error</p>
+                                                            <p className="text-[10px] text-gray-500">{paymentError}</p>
+                                                        </div>
+                                                    ) : (
+                                                        <>
+                                                            <Loader2 className="w-8 h-8 animate-spin text-gray-200 mb-4" />
+                                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Initializing Secure Gateway...</p>
+                                                        </>
+                                                    )}
                                                 </div>
                                             )}
                                         </div>
