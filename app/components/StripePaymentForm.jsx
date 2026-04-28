@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
-  PaymentElement,
+  CardElement,
   useStripe,
   useElements,
 } from "@stripe/react-stripe-js";
 
-const StripePaymentForm = ({ amount, onSuccess, onLoading }) => {
+const StripePaymentForm = ({ amount, clientSecret, onSuccess, onLoading }) => {
   const stripe = useStripe();
   const elements = useElements();
 
@@ -17,20 +17,17 @@ const StripePaymentForm = ({ amount, onSuccess, onLoading }) => {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    if (!stripe || !elements) {
+    if (!stripe || !elements || !clientSecret) {
       return;
     }
 
     setIsProcessing(true);
     onLoading(true);
 
-    const { error, paymentIntent } = await stripe.confirmPayment({
-      elements,
-      confirmParams: {
-        // No redirect needed for simple testing, but required for production
-        // return_url: `${window.location.origin}/order-success`,
-      },
-      redirect: "if_required",
+    const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+      payment_method: {
+        card: elements.getElement(CardElement),
+      }
     });
 
     if (error) {
@@ -45,14 +42,26 @@ const StripePaymentForm = ({ amount, onSuccess, onLoading }) => {
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="p-6 bg-white border border-gray-100 rounded-2xl shadow-sm">
-        <PaymentElement 
-          options={{
-            layout: {
-              type: 'tabs',
-              defaultCollapsed: false,
-            }
-          }}
-        />
+        <div className="p-5 border border-gray-200 rounded-xl bg-gray-50/50">
+          <CardElement 
+            options={{
+              style: {
+                base: {
+                  fontSize: '15px',
+                  fontFamily: 'system-ui, sans-serif',
+                  color: '#000000',
+                  '::placeholder': {
+                    color: '#aab7c4',
+                  },
+                },
+                invalid: {
+                  color: '#ef4444',
+                },
+              },
+              hidePostalCode: true
+            }}
+          />
+        </div>
       </div>
       
       {errorMessage && (

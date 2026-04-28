@@ -214,6 +214,7 @@ const CheckoutPage = () => {
                                                 >
                                                     <StripePaymentForm 
                                                         amount={getCartTotal()} 
+                                                        clientSecret={clientSecret}
                                                         onSuccess={() => {
                                                             setIsOrdered(true);
                                                             clearCart();
