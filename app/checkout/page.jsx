@@ -80,24 +80,22 @@ const STRIPE_APPEARANCE = {
             marginBottom: '6px',
         },
         '.Tab': {
-            display: 'flex',
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '6px',
-            padding: '10px 12px',
-            transition: 'all 0.2s ease',
+            display: 'flex !important',
+            flexDirection: 'row !important',
+            alignItems: 'center !important',
+            justifyContent: 'center !important',
+            gap: '8px !important',
+            padding: '12px 16px !important',
         },
         '.TabIcon': {
             marginBottom: '0px !important',
-            width: '20px',
-            height: '20px',
+            marginRight: '8px !important',
         },
         '.TabLabel': {
             marginTop: '0px !important',
-            fontWeight: '600',
-            fontSize: '13px',
-            whiteSpace: 'nowrap',
+            whiteSpace: 'nowrap !important',
+            fontSize: '13px !important',
+            fontWeight: '600 !important',
         }
     }
 };
