@@ -10,10 +10,13 @@ import StripePaymentForm from '../components/StripePaymentForm';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || "pk_te" + "st_51TQntxHasuGpOGsbUTFtGXcXdTerUzfkBGfNeu5xmQw9O7z8FX8o1XNcxDius75M3yUDA7pfR4qFpBlcfv7cJTo000SGFrcAw9");
 
-const FloatingInput = ({ label, type = "text", required = true }) => {
+const FloatingInput = ({ label, name, value, onChange, type = "text", required = true }) => {
     return (
         <div className="relative group">
             <input 
+                name={name}
+                value={value}
+                onChange={onChange}
                 required={required}
                 type={type}
                 placeholder=" "
@@ -26,12 +29,14 @@ const FloatingInput = ({ label, type = "text", required = true }) => {
     );
 };
 
-const FloatingSelect = ({ label, options, required = true }) => {
+const FloatingSelect = ({ label, name, value, onChange, options, required = true }) => {
     return (
         <div className="relative group">
             <select 
+                name={name}
+                value={value}
+                onChange={onChange}
                 required={required}
-                defaultValue=""
                 className="block px-6 py-5 w-full text-[13px] font-medium text-black bg-white border border-gray-100 appearance-none focus:outline-none focus:ring-0 focus:border-black peer transition-all duration-300 rounded-lg"
             >
                 <option value="" disabled className="text-gray-200">Select City</option>
@@ -108,6 +113,20 @@ const CheckoutPage = () => {
     const [clientSecret, setClientSecret] = useState("");
     const [paymentError, setPaymentError] = useState("");
     const intentCreated = React.useRef(false);
+    const [formData, setFormData] = useState({
+        firstName: "",
+        lastName: "",
+        email: "",
+        phone: "",
+        address: "",
+        city: "",
+        postalCode: ""
+    });
+
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
 
     React.useEffect(() => {
         const total = getCartTotal();
@@ -155,44 +174,42 @@ const CheckoutPage = () => {
     const handlePlaceOrder = (e) => {
         e.preventDefault();
         setLoading(true);
+        
+        const total = getCartTotal();
+        const orderId = Math.floor(100000 + Math.random() * 900000).toString();
+        const now = new Date();
+        
+        const cardHolderName = (formData?.firstName && formData?.lastName) 
+            ? `${formData.firstName} ${formData.lastName}` 
+            : "Premium Customer";
+
+        const latestOrder = {
+            orderId,
+            total,
+            items: cartItems.map(item => ({
+                title: item.title,
+                price: item.price,
+                quantity: item.quantity,
+                thumbnail: item.thumbnail || item.images?.[0]
+            })),
+            date: now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+            time: now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+            paymentMethod: 'Cash on Delivery',
+            cardHolder: cardHolderName,
+            maskedCard: 'CASH ON DELIVERY',
+            receivedBy: 'ZARA INSPIRED STORE'
+        };
+
+        localStorage.setItem('latestOrder', JSON.stringify(latestOrder));
+
         setTimeout(() => {
             setLoading(false);
-            setIsOrdered(true);
-            clearCart();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            window.location.href = '/order-success';
         }, 1500);
     };
 
-    // ORDER CONFIRMED
-    if (isOrdered) {
-        return (
-            <div className="bg-white min-h-[85vh] flex flex-col items-center justify-center py-20 animate-in fade-in duration-700">
-                <div className="max-w-md w-full px-6 flex flex-col items-center text-center space-y-10">
-                    <div className="w-16 h-16 border border-black rounded-full flex items-center justify-center">
-                        <CheckCircle2 size={24} className="text-black" strokeWidth={1} />
-                    </div>
-                    <div className="space-y-4">
-                        <h1 className="text-2xl md:text-3xl font-light text-black uppercase tracking-[0.3em]">Order Confirmed</h1>
-                        <p className="text-[12px] font-medium text-gray-400 uppercase tracking-widest leading-relaxed">
-                            Thank you for your purchase. We have received your order and are preparing it for shipment.
-                        </p>
-                    </div>
-                    <div className="w-full h-px bg-gray-50"></div>
-                    <div className="space-y-6 w-full">
-                        <Link href="/products" className="btn-animate block w-full py-5 bg-black text-white text-[10px] font-bold uppercase tracking-[0.3em] rounded-full shadow-lg">
-                            Continue Shopping
-                        </Link>
-                        <Link href="/" className="block text-[9px] font-black uppercase tracking-[0.3em] text-black hover:text-gray-400 transition-colors">
-                            Return Home
-                        </Link>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
     // EMPTY CART
-    if (cartItems.length === 0) {
+    if (!isOrdered && cartItems.length === 0) {
         return (
             <div className="bg-[#FAF9F6] min-h-screen pt-28 pb-40 font-outfit flex flex-col items-center justify-center">
                 <div className="text-center space-y-6">
@@ -220,9 +237,36 @@ const CheckoutPage = () => {
                     <StripePaymentForm 
                         amount={getCartTotal()} 
                         onSuccess={() => {
-                            setIsOrdered(true);
-                            clearCart();
-                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                            const total = getCartTotal();
+                            const orderId = Math.floor(100000 + Math.random() * 900000).toString();
+                            const now = new Date();
+                            
+                            // Explicitly get name from formData state
+                            const currentName = (formData?.firstName && formData?.lastName) 
+                                ? `${formData.firstName} ${formData.lastName}` 
+                                : "Premium Customer";
+                            
+                            console.log("Saving Order Data:", { orderId, total, currentName });
+
+                            const latestOrder = {
+                                orderId,
+                                total,
+                                items: cartItems.map(item => ({
+                                    title: item.title,
+                                    price: item.price,
+                                    quantity: item.quantity,
+                                    thumbnail: item.thumbnail || item.images?.[0]
+                                })),
+                                date: now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+                                time: now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+                                paymentMethod: 'Card Payment',
+                                cardHolder: currentName,
+                                maskedCard: '**** **** **** 4242',
+                                receivedBy: 'ZARA INSPIRED STORE'
+                            };
+
+                            localStorage.setItem('latestOrder', JSON.stringify(latestOrder));
+                            window.location.href = '/order-success';
                         }}
                         onLoading={setLoading}
                     />
@@ -273,15 +317,15 @@ const CheckoutPage = () => {
             <div className="container mx-auto px-6 lg:px-20 max-w-7xl">
                 
                 {/* NAV */}
-                <div className="relative flex items-center justify-center mb-16 border-b border-gray-100 pb-10">
-                    <div className="absolute left-0">
+                <div className="flex flex-col md:flex-row items-center justify-between mb-16 border-b border-gray-100 pb-10 gap-8">
+                    <div className="w-full md:w-auto flex justify-start">
                         <Link href="/cart" className="btn-animate flex items-center gap-3 px-8 py-3.5 bg-black text-white text-[10px] font-black uppercase tracking-[0.3em] transition-all rounded-full shadow-lg">
-                            <ChevronLeft size={16} /> Bag
+                            <ChevronLeft size={16} /> Back to Bag
                         </Link>
                     </div>
-                    <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter text-black text-center">Checkout</h2>
-                    <div className="absolute right-0 hidden md:block">
-                        {/* Spacer for symmetry */}
+                    <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter text-black text-center md:absolute md:left-1/2 md:-translate-x-1/2">Checkout</h2>
+                    <div className="hidden md:block w-32">
+                        {/* Spacer for symmetry on desktop */}
                     </div>
                 </div>
 
@@ -295,13 +339,13 @@ const CheckoutPage = () => {
                             <div className="space-y-8">
                                 <p className="text-[14px] font-medium uppercase tracking-[0.4em] text-black/30">Step 01 / Shipping Details</p>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                    <FloatingInput label="Your First Name" />
-                                    <FloatingInput label="Your Last Name" />
+                                    <FloatingInput label="Your First Name" name="firstName" value={formData.firstName} onChange={handleInputChange} />
+                                    <FloatingInput label="Your Last Name" name="lastName" value={formData.lastName} onChange={handleInputChange} />
                                     <div className="md:col-span-2">
-                                        <FloatingInput label="Global Shipping Address" />
+                                        <FloatingInput label="Global Shipping Address" name="address" value={formData.address} onChange={handleInputChange} />
                                     </div>
-                                    <FloatingSelect label="City / Region" options={cities} />
-                                    <FloatingInput label="Active Phone Number" />
+                                    <FloatingSelect label="City / Region" options={cities} name="city" value={formData.city} onChange={handleInputChange} />
+                                    <FloatingInput label="Active Phone Number" name="phone" value={formData.phone} onChange={handleInputChange} />
                                 </div>
                             </div>
 
