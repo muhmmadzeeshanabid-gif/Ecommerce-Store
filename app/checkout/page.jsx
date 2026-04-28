@@ -196,7 +196,50 @@ const CheckoutPage = () => {
                                                     stripe={stripePromise} 
                                                     options={{ 
                                                         clientSecret,
-                                                        appearance: { theme: 'none' },
+                                                        appearance: {
+                                                            theme: 'stripe',
+                                                            variables: {
+                                                                colorPrimary: '#000000',
+                                                                colorBackground: '#ffffff',
+                                                                colorText: '#000000',
+                                                                colorDanger: '#ef4444',
+                                                                fontFamily: 'system-ui, sans-serif',
+                                                                spacingUnit: '4px',
+                                                                borderRadius: '10px',
+                                                                fontSizeBase: '14px',
+                                                            },
+                                                            rules: {
+                                                                '.Input': {
+                                                                    border: '1.5px solid #e5e7eb',
+                                                                    boxShadow: 'none',
+                                                                    padding: '12px 14px',
+                                                                },
+                                                                '.Input:focus': {
+                                                                    border: '1.5px solid #000000',
+                                                                    boxShadow: '0 0 0 1px #000000',
+                                                                },
+                                                                '.Tab': {
+                                                                    border: '1.5px solid #e5e7eb',
+                                                                    backgroundColor: '#f9fafb',
+                                                                    boxShadow: 'none',
+                                                                },
+                                                                '.Tab:hover': {
+                                                                    border: '1.5px solid #000000',
+                                                                },
+                                                                '.Tab--selected': {
+                                                                    border: '1.5px solid #000000',
+                                                                    backgroundColor: '#000000',
+                                                                    color: '#ffffff',
+                                                                },
+                                                                '.Label': {
+                                                                    fontWeight: '600',
+                                                                    fontSize: '12px',
+                                                                    textTransform: 'uppercase',
+                                                                    letterSpacing: '0.05em',
+                                                                    color: '#6b7280',
+                                                                },
+                                                            }
+                                                        },
                                                         loader: 'never',
                                                     }}
                                                 >
