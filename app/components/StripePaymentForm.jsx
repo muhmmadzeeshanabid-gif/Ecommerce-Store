@@ -21,6 +21,13 @@ const StripePaymentForm = ({ amount, onSuccess, onLoading }) => {
       elements,
       confirmParams: {
         return_url: window.location.origin + "/checkout?success=true",
+        payment_method_data: {
+          billing_details: {
+            address: {
+              country: 'US', // Default country since field is hidden
+            }
+          }
+        }
       },
       redirect: "if_required",
     });
