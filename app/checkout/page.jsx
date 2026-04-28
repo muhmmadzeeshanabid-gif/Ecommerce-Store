@@ -73,14 +73,34 @@ const CheckoutPage = () => {
                 if (!res.ok) throw new Error(data.error || 'Failed to initialize payment');
                 return data;
             })
-            .then((data) => setClientSecret(data.clientSecret))
+            .then((data) => {
+                if (data.clientSecret) {
+                    setClientSecret(data.clientSecret);
+                } else {
+                    throw new Error('No client secret received');
+                }
+            })
             .catch((err) => {
                 console.error("Error fetching stripe secret:", err);
                 intentCreated.current = false;
                 setPaymentError(err.message);
             });
         }
-    }, [cartItems]);
+    }, []);
+
+    // If cart is empty and not ordered, redirect to cart
+    if (!isOrdered && cartItems.length === 0) {
+        return (
+            <div className="bg-[#FAF9F6] min-h-screen pt-28 pb-40 font-outfit flex flex-col items-center justify-center">
+                <div className="text-center space-y-6">
+                    <p className="text-[14px] font-bold uppercase tracking-widest text-gray-400">Your cart is empty</p>
+                    <Link href="/products" className="btn-animate inline-block px-10 py-5 bg-black text-white text-[10px] font-black uppercase tracking-[0.3em] rounded-full shadow-lg">
+                        Browse Products
+                    </Link>
+                </div>
+            </div>
+        );
+    }
 
     const cities = [
         "Lahore", "Karachi", "Islamabad", "Rawalpindi", "Faisalabad", 
