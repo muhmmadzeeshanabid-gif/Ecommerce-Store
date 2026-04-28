@@ -204,64 +204,27 @@ const CheckoutPage = () => {
                                                                 colorText: '#000000',
                                                                 colorDanger: '#ef4444',
                                                                 fontFamily: 'system-ui, sans-serif',
-                                                                spacingUnit: '4px',
                                                                 borderRadius: '10px',
                                                                 fontSizeBase: '14px',
                                                             },
                                                             rules: {
                                                                 '.Input': {
-                                                                    border: '1.5px solid #e5e7eb',
+                                                                    border: '1.5px solid #d1d5db',
                                                                     boxShadow: 'none',
                                                                     padding: '12px 14px',
+                                                                    backgroundColor: '#ffffff',
                                                                 },
                                                                 '.Input:focus': {
                                                                     border: '1.5px solid #000000',
                                                                     boxShadow: '0 0 0 1px #000000',
-                                                                },
-                                                                '.Tab': {
-                                                                    border: '1.5px solid #e5e7eb',
-                                                                    backgroundColor: '#f9fafb',
-                                                                    boxShadow: 'none',
-                                                                    display: 'flex',
-                                                                    alignItems: 'center',
-                                                                    justifyContent: 'center',
-                                                                    gap: '8px',
-                                                                    padding: '14px 20px',
-                                                                    transition: 'all 0.15s ease',
-                                                                },
-                                                                '.Tab:hover': {
-                                                                    border: '1.5px solid #000000',
-                                                                },
-                                                                '.Tab--selected': {
-                                                                    border: '2px solid #000000',
-                                                                    backgroundColor: '#000000',
-                                                                    color: '#ffffff',
-                                                                    transition: 'all 0.15s ease',
-                                                                },
-                                                                '.Tab--selected:hover': {
-                                                                    backgroundColor: '#000000',
-                                                                    color: '#ffffff',
-                                                                },
-                                                                '.TabIcon': {
-                                                                    fill: '#6b7280',
-                                                                },
-                                                                '.TabIcon--selected': {
-                                                                    fill: '#ffffff',
-                                                                },
-                                                                '.TabLabel': {
-                                                                    fontWeight: '700',
-                                                                    fontSize: '13px',
-                                                                    transition: 'color 0.15s ease',
-                                                                },
-                                                                '.TabLabel--selected': {
-                                                                    color: '#ffffff',
                                                                 },
                                                                 '.Label': {
                                                                     fontWeight: '600',
                                                                     fontSize: '12px',
                                                                     textTransform: 'uppercase',
                                                                     letterSpacing: '0.05em',
-                                                                    color: '#6b7280',
+                                                                    color: '#374151',
+                                                                    marginBottom: '6px',
                                                                 },
                                                             }
                                                         },

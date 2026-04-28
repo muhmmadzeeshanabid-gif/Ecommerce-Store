@@ -34,13 +34,27 @@ const StripePaymentForm = ({ amount, onSuccess, onLoading }) => {
 
   return (
     <div className="space-y-6">
-      <div className="bg-[#f8f9fb] border border-gray-200 rounded-2xl p-8 shadow-sm">
+      <div className="bg-white border border-gray-200 rounded-2xl p-6 md:p-8 shadow-sm">
         <PaymentElement 
           options={{
-            layout: 'tabs',
-            wallets: { applePay: 'never', googlePay: 'never' },
+            layout: {
+              type: 'accordion',
+              defaultCollapsed: false,
+              radios: false,
+              spacedAccordionItems: false,
+            },
+            paymentMethodOrder: ['card'],
+            wallets: {
+              applePay: 'never',
+              googlePay: 'never',
+            },
             fields: {
-              billingDetails: { address: { country: 'never' } }
+              billingDetails: {
+                address: {
+                  country: 'never',
+                  postalCode: 'never',
+                }
+              }
             }
           }}
         />
