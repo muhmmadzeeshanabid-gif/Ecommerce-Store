@@ -273,13 +273,15 @@ const CheckoutPage = () => {
             <div className="container mx-auto px-6 lg:px-20 max-w-7xl">
                 
                 {/* NAV */}
-                <div className="flex items-center justify-between mb-16 border-b border-gray-100 pb-10">
-                    <Link href="/cart" className="btn-animate flex items-center gap-3 px-8 py-3.5 bg-black text-white text-[10px] font-black uppercase tracking-[0.3em] transition-all rounded-full shadow-lg">
-                        <ChevronLeft size={16} /> Bag
-                    </Link>
-                    <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter text-black">Checkout</h2>
-                    <div className="hidden md:flex items-center gap-2 opacity-0 pointer-events-none">
-                        {/* Hidden to maintain layout balance, moved to summary */}
+                <div className="relative flex items-center justify-center mb-16 border-b border-gray-100 pb-10">
+                    <div className="absolute left-0">
+                        <Link href="/cart" className="btn-animate flex items-center gap-3 px-8 py-3.5 bg-black text-white text-[10px] font-black uppercase tracking-[0.3em] transition-all rounded-full shadow-lg">
+                            <ChevronLeft size={16} /> Bag
+                        </Link>
+                    </div>
+                    <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter text-black text-center">Checkout</h2>
+                    <div className="absolute right-0 hidden md:block">
+                        {/* Spacer for symmetry */}
                     </div>
                 </div>
 
