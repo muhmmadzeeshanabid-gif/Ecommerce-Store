@@ -222,13 +222,38 @@ const CheckoutPage = () => {
                                                                     border: '1.5px solid #e5e7eb',
                                                                     backgroundColor: '#f9fafb',
                                                                     boxShadow: 'none',
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    justifyContent: 'center',
+                                                                    gap: '8px',
+                                                                    padding: '14px 20px',
+                                                                    transition: 'all 0.15s ease',
                                                                 },
                                                                 '.Tab:hover': {
                                                                     border: '1.5px solid #000000',
                                                                 },
                                                                 '.Tab--selected': {
-                                                                    border: '1.5px solid #000000',
+                                                                    border: '2px solid #000000',
                                                                     backgroundColor: '#000000',
+                                                                    color: '#ffffff',
+                                                                    transition: 'all 0.15s ease',
+                                                                },
+                                                                '.Tab--selected:hover': {
+                                                                    backgroundColor: '#000000',
+                                                                    color: '#ffffff',
+                                                                },
+                                                                '.TabIcon': {
+                                                                    fill: '#6b7280',
+                                                                },
+                                                                '.TabIcon--selected': {
+                                                                    fill: '#ffffff',
+                                                                },
+                                                                '.TabLabel': {
+                                                                    fontWeight: '700',
+                                                                    fontSize: '13px',
+                                                                    transition: 'color 0.15s ease',
+                                                                },
+                                                                '.TabLabel--selected': {
                                                                     color: '#ffffff',
                                                                 },
                                                                 '.Label': {
