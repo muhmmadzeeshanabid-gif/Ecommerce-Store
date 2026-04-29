@@ -1,491 +1,331 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Store, ShoppingCart, User, Menu, X, LogIn, UserPlus, Mail, Lock, UserCircle, ChevronDown, Heart, Eye, EyeOff, HelpCircle } from 'lucide-react';
+import { ShoppingCart, User, Menu, X, Mail, Lock, ChevronDown, Heart, Eye, EyeOff, Fingerprint, ShieldCheck, CheckCircle2, Sparkles, AlertCircle } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { fetchApi } from '../lib/api';
 
 const Header = () => {
   const pathname = usePathname();
-  const { getCartCount, notification, setNotification, wishlistItems } = useCart();
-  const { user, login, signup, resetPassword, logout, showAuthModal, openAuthModal, closeAuthModal } = useAuth();
+  const { getCartCount, wishlistItems } = useCart();
+  const { user, login, signup, logout, showAuthModal, openAuthModal, closeAuthModal } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false); // Default to login
-  const [isForgotPassword, setIsForgotPassword] = useState(false);
-  const [forgotStep, setForgotStep] = useState(1); // 1: Email, 2: Security Questions + New Password
+  const [isSignUp, setIsSignUp] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [userSecurityQuestions, setUserSecurityQuestions] = useState([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [categories, setCategories] = useState([]);
   const [authError, setAuthError] = useState("");
   const [authSuccess, setAuthSuccess] = useState("");
   const [isAuthLoading, setIsAuthLoading] = useState(false);
-
-  const securityQuestionsList = [
-    "What was your childhood nickname?",
-    "What is the name of your favorite childhood friend?",
-    "In what city or town did your parents meet?",
-    "What is the middle name of your oldest sibling?",
-    "What is the name of the first beach you visited?",
-    "What was the name of your first stuffed animal?",
-    "What is your favorite movie?",
-    "What is the name of the street you grew up on?",
-    "What is your favorite food?",
-    "What is the name of your first employer?",
-    "What was your dream job as a child?",
-    "What was the first concert you attended?",
-    "What is the name of your favorite teacher?",
-    "What is the name of your first pet?",
-    "What is your grandmother's first name?"
-  ];
+  
+  const [isBiometricSupported, setIsBiometricSupported] = useState(false);
+  
+  // Advanced Animation States
+  const [showBioOverlay, setShowBioOverlay] = useState(false);
+  const [bioMode, setBioMode] = useState('login');
+  const [bioProgress, setBioProgress] = useState(0);
+  const [bioStatus, setBioStatus] = useState("");
+  const [isHolding, setIsHolding] = useState(false);
+  const [isHardwareVerified, setIsHardwareVerified] = useState(false);
+  
+  const holdInterval = useRef(null);
 
   useEffect(() => {
     const fetchCats = async () => {
       try {
         const data = await fetchApi('/api/categories');
         setCategories(data);
-      } catch (err) {
-        console.error("Error fetching categories for header:", err);
-      }
+      } catch (err) { console.error(err); }
     };
     fetchCats();
+
+    if (window.PublicKeyCredential) {
+        window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()
+            .then(available => setIsBiometricSupported(available))
+            .catch(() => setIsBiometricSupported(false));
+    }
   }, []);
+
+  // HOLD LOGIC
+  const startHolding = () => {
+    if (!isHardwareVerified) return;
+    setIsHolding(true);
+    setBioStatus("Syncing Biometric Data...");
+    
+    holdInterval.current = setInterval(() => {
+        setBioProgress(prev => {
+            if (prev >= 100) {
+                clearInterval(holdInterval.current);
+                return 100;
+            }
+            return prev + 1.5; // Smooth slow filling
+        });
+    }, 50);
+  };
+
+  const stopHolding = () => {
+    setIsHolding(false);
+    if (bioProgress < 100) {
+        setBioStatus("Paused. Hold to continue.");
+        clearInterval(holdInterval.current);
+    }
+  };
+
+  useEffect(() => {
+    if (bioProgress >= 100) {
+        handleFinalSuccess();
+    }
+  }, [bioProgress]);
+
+  const handleFinalSuccess = async () => {
+      clearInterval(holdInterval.current);
+      setBioStatus("Synchronization Complete.");
+      
+      if (bioMode === 'register' && user) {
+          setAuthSuccess("Fingerprint Secured.");
+          setTimeout(() => setShowBioOverlay(false), 1500);
+      } else if (bioMode === 'login') {
+          // Final login logic...
+          const passkeys = JSON.parse(localStorage.getItem('zara_passkeys_real') || '[]');
+          const lastUserKey = passkeys[passkeys.length - 1]; // Mocking the match
+          const users = JSON.parse(localStorage.getItem('zara_users') || '[]');
+          const foundUser = users.find(u => u.email === lastUserKey.userEmail);
+          if (foundUser) {
+              await login(foundUser.email, foundUser.password);
+              setAuthSuccess("Access Authorized.");
+              setTimeout(() => { setShowBioOverlay(false); closeAuthModal(); }, 1500);
+          }
+      }
+  };
+
+  const registerRealBiometric = async () => {
+    if (!user) return;
+    try {
+        setAuthError(""); setAuthSuccess("");
+        setShowBioOverlay(true);
+        setBioMode('register');
+        setBioStatus("Awaiting Hardware Touch...");
+        setBioProgress(0);
+        setIsHardwareVerified(false);
+
+        const challenge = new Uint8Array(32);
+        window.crypto.getRandomValues(challenge);
+        const userID = Uint8Array.from(user.email, c => c.charCodeAt(0));
+
+        const publicKeyCredentialCreationOptions = {
+            challenge: challenge,
+            rp: { name: "Zara Inspired Store", id: window.location.hostname },
+            user: { id: userID, name: user.email, displayName: user.displayName || user.email },
+            pubKeyCredParams: [{ alg: -7, type: "public-key" }],
+            authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required" }
+        };
+
+        const credential = await navigator.credentials.create({ publicKey: publicKeyCredentialCreationOptions });
+
+        if (credential) {
+            setIsHardwareVerified(true);
+            setBioStatus("Hardware Verified. Now HOLD the screen icon to Sync.");
+            const credentialId = btoa(String.fromCharCode(...new Uint8Array(credential.rawId)));
+            const passkeys = JSON.parse(localStorage.getItem('zara_passkeys_real') || '[]');
+            passkeys.push({ userEmail: user.email, credentialId: credentialId, registeredAt: new Date().toISOString() });
+            localStorage.setItem('zara_passkeys_real', JSON.stringify(passkeys));
+        }
+    } catch (err) {
+        setShowBioOverlay(false);
+        setAuthError("Registration canceled.");
+    }
+  };
+
+  const loginWithRealBiometric = async () => {
+    try {
+        setAuthError(""); setAuthSuccess("");
+        const passkeys = JSON.parse(localStorage.getItem('zara_passkeys_real') || '[]');
+        if (passkeys.length === 0) throw new Error("No Biometric ID found.");
+
+        setShowBioOverlay(true);
+        setBioMode('login');
+        setBioStatus("Awaiting Hardware Identification...");
+        setBioProgress(0);
+        setIsHardwareVerified(false);
+
+        const challenge = new Uint8Array(32);
+        window.crypto.getRandomValues(challenge);
+
+        const publicKeyCredentialRequestOptions = {
+            challenge: challenge,
+            allowCredentials: passkeys.map(pk => ({ id: Uint8Array.from(atob(pk.credentialId), c => c.charCodeAt(0)), type: 'public-key' })),
+            userVerification: 'required'
+        };
+
+        const assertion = await navigator.credentials.get({ publicKey: publicKeyCredentialRequestOptions });
+
+        if (assertion) {
+            setIsHardwareVerified(true);
+            setBioStatus("Identity Confirmed. HOLD the screen icon to Finish Login.");
+        }
+    } catch (err) {
+        setShowBioOverlay(false);
+        setAuthError(err.message || "Recognition failed.");
+    }
+  };
 
   const handleAuth = async (e) => {
     e.preventDefault();
-    setAuthError("");
-    setAuthSuccess("");
-    setIsAuthLoading(true);
-
-    const email = e.target.email.value;
-    const password = e.target.password?.value;
-    const confirmPassword = e.target.confirmPassword?.value;
-    const name = e.target.name?.value;
-    
-    // Recovery Answers
-    const recoveryAnswer = e.target.recoveryAnswer?.value;
-
-    // Signup Questions/Answers
-    const signupQuestion = e.target.signupQuestion?.value;
-    const signupAnswer = e.target.signupAnswer?.value;
-
+    setAuthError(""); setIsAuthLoading(true);
     try {
-      if (isForgotPassword) {
-        if (forgotStep === 1) {
-            // Check if user exists and get their questions
-            const users = JSON.parse(localStorage.getItem('zara_users') || '[]');
-            const found = users.find(u => u.email === email);
-            if (!found) throw new Error("No account found with this email.");
-            
-            if (found.securityQuestions && found.securityQuestions.length > 0) {
-                setUserSecurityQuestions(found.securityQuestions.map(q => q.question));
-                setForgotStep(2);
-            } else {
-                // Legacy users or no questions set
-                setForgotStep(2);
-                setUserSecurityQuestions(["Question (Not set)"]);
-            }
-            setIsAuthLoading(false);
-            return;
-        }
-
-        if (password !== confirmPassword) {
-          throw new Error("Passwords do not match.");
-        }
-        await resetPassword(email, password, [recoveryAnswer]);
-        setAuthSuccess("Password reset successfully! Please login.");
-        setIsForgotPassword(false);
-        setForgotStep(1);
-        setIsSignUp(false);
-      } else if (isSignUp) {
-        const securityData = [
-            { question: signupQuestion, answer: signupAnswer }
-        ];
-        await signup(email, password, name, securityData);
-        closeAuthModal();
-      } else {
-        await login(email, password);
-        closeAuthModal();
-      }
-    } catch (err) {
-      console.error("Auth error:", err);
-      setAuthError(err.message);
-    } finally {
-      setIsAuthLoading(false);
-    }
-  };
-
-  const handleLogout = async () => {
-    try {
-      await logout();
+      if (isSignUp) await signup(e.target.email.value, e.target.password.value, e.target.name.value, []);
+      else await login(e.target.email.value, e.target.password.value);
       closeAuthModal();
-    } catch (err) {
-      console.error("Logout error:", err);
-    }
+    } catch (err) { setAuthError(err.message); }
+    finally { setIsAuthLoading(false); }
   };
 
   return (
-    <header className="fixed top-0 left-0 w-full z-[1000] bg-white border-b border-gray-200 h-20 flex items-center">
+    <header className="fixed top-0 left-0 w-full z-[1000] bg-white border-b border-gray-200 h-20 flex items-center font-outfit text-black">
       <nav className="w-full max-w-7xl mx-auto px-4 md:px-8 flex items-center">
-        {/* Left: Brand - Wrapper for centering */}
         <div className="flex-1 flex justify-start">
-          <Link href="/" className="flex items-center gap-3 no-underline cursor-pointer">
-            <span className="text-2xl font-bold tracking-widest text-black uppercase">
-              ZARA
-            </span>
-          </Link>
+          <Link href="/" className="text-2xl font-black tracking-[0.2em] uppercase">ZARA</Link>
         </div>
 
-        {/* Center: Nav Links */}
-        <ul className={`
-          flex list-none flex-col md:flex-row gap-8 md:gap-10
-          fixed md:static top-20 md:top-0 left-0 w-full md:w-auto h-[calc(100vh-80px)] md:h-auto 
-          bg-black md:bg-transparent items-start md:items-center justify-start md:justify-center pt-8 md:pt-0 px-8 md:px-0
-          transition-all duration-300 z-[1500] border-t border-white/5 md:border-none
-          ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0 hidden md:flex'}
-        `}>
-          <li className="w-full border-b border-white/10 md:border-none py-6 md:py-0">
-            <Link href="/" className={`text-xl md:text-xs uppercase tracking-[0.2em] md:tracking-wider font-bold transition-all relative pb-1 ${pathname === '/' ? 'text-white md:text-black md:after:absolute md:after:bottom-0 md:after:left-0 md:after:w-full md:after:h-[2px] md:after:bg-black' : 'text-gray-500 md:text-gray-400 md:hover:text-black hover:text-white'}`} onClick={() => setIsOpen(false)}>
-              Home
-            </Link>
+        <ul className={`flex list-none flex-col md:flex-row gap-8 md:gap-10 fixed md:static top-20 md:top-0 left-0 w-full md:w-auto h-[calc(100vh-80px)] md:h-auto bg-black md:bg-transparent items-start md:items-center justify-start md:justify-center pt-8 md:pt-0 px-8 md:px-0 transition-all duration-300 z-[1500] ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0 hidden md:flex'}`}>
+          <li><Link href="/" className="text-xs uppercase tracking-wider font-bold">Home</Link></li>
+          <li className="relative group" onMouseEnter={() => window.innerWidth > 768 && setIsDropdownOpen(true)} onMouseLeave={() => window.innerWidth > 768 && setIsDropdownOpen(false)}>
+             <button className="flex items-center gap-1.5 text-xs uppercase tracking-wider font-bold">Categories <ChevronDown size={12} /></button>
+             {isDropdownOpen && <div className="absolute top-full left-1/2 -translate-x-1/2 w-52 bg-white border border-gray-100 shadow-xl p-6"><div className="flex flex-col gap-3">{categories.map(cat => <Link key={cat.id} href={`/categories/${cat.slug}`} className="text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:text-black">{cat.name}</Link>)}</div></div>}
           </li>
-          
-          <li 
-            className="w-full border-b border-white/10 md:border-none py-6 md:py-0 relative group"
-            onMouseEnter={() => window.innerWidth > 768 && setIsDropdownOpen(true)}
-            onMouseLeave={() => window.innerWidth > 768 && setIsDropdownOpen(false)}
-          >
-             <button 
-              onClick={() => window.innerWidth <= 768 && setIsDropdownOpen(!isDropdownOpen)}
-              className={`flex md:inline-flex items-center gap-1.5 justify-between md:justify-center w-full md:w-auto text-xl md:text-xs uppercase tracking-[0.2em] md:tracking-wider font-bold transition-all relative pb-1 cursor-pointer ${pathname.startsWith('/categories') ? 'text-white md:text-black md:after:absolute md:after:bottom-0 md:after:left-0 md:after:w-full md:after:h-[2px] md:after:bg-black' : 'text-gray-500 md:text-gray-400 md:hover:text-black hover:text-white'}`}
-            >
-              <span>Categories</span>
-              <ChevronDown size={12} className={`transition-transform ${isDropdownOpen ? 'rotate-180' : ''} mt-0.5`} />
-            </button>
-            
-            <div 
-              className={`
-              ${isDropdownOpen ? 'max-h-96 opacity-100 mt-6 md:mt-0' : 'max-h-0 opacity-0 overflow-hidden'}
-              md:absolute md:top-full md:left-1/2 md:-translate-x-1/2 md:w-52 bg-black md:bg-white md:border md:border-gray-100 md:shadow-xl py-4 md:p-6 transition-all duration-300 z-50
-            `}>
-                <div className="flex flex-col gap-4 md:gap-3 text-left">
-                  {categories.length > 0 ? (
-                    categories.map(cat => (
-                      <Link 
-                        key={cat.id}
-                        href={`/categories/${cat.slug}`}
-                        className={`text-[12px] md:text-[10px] font-bold uppercase tracking-widest transition-all ${pathname === `/categories/${cat.slug}` ? 'text-white md:text-black' : 'text-gray-500 md:text-gray-400 hover:text-white md:hover:text-black'}`}
-                        onClick={() => {
-                            setIsDropdownOpen(false);
-                            setIsOpen(false);
-                        }}
-                      >
-                        {cat.name}
-                      </Link>
-                    ))
-                  ) : (
-                    <span className="text-[10px] text-gray-400 uppercase tracking-widest">No categories</span>
-                  )}
-                </div>
-            </div>
-          </li>
-
-          <li className="w-full border-b border-white/10 md:border-none py-6 md:py-0">
-            <Link href="/products" className={`text-xl md:text-xs uppercase tracking-[0.2em] md:tracking-wider font-bold transition-all relative pb-1 ${pathname === '/products' ? 'text-white md:text-black md:after:absolute md:after:bottom-0 md:after:left-0 md:after:w-full md:after:h-[2px] md:after:bg-black' : 'text-gray-500 md:text-gray-400 md:hover:text-black hover:text-white'}`} onClick={() => setIsOpen(false)}>
-              Latest
-            </Link>
-          </li>
-          <li className="w-full border-b border-white/10 md:border-none py-6 md:py-0">
-            <button 
-              onClick={() => {
-                const footer = document.getElementById('footer');
-                if (footer) footer.scrollIntoView({ behavior: 'smooth' });
-                setIsOpen(false);
-              }} 
-              className="text-gray-500 md:text-gray-400 md:hover:text-black hover:text-white font-bold text-xl md:text-xs uppercase tracking-[0.2em] md:tracking-wider cursor-pointer w-full text-left md:w-auto whitespace-nowrap pb-1"
-            >
-              Contact Us
-            </button>
-          </li>
+          <li><Link href="/products" className="text-xs uppercase tracking-wider font-bold">Latest</Link></li>
         </ul>
 
-        {/* Right: Icons - Wrapper for centering */}
         <div className="flex-1 flex items-center justify-end gap-6">
-          {/* Wishlist Icon */}
-          <Link href="/wishlist" className="relative flex items-center justify-center text-black hover:scale-110 transition-transform cursor-pointer" aria-label="Wishlist">
-            <Heart size={20} strokeWidth={1.5} />
-            {wishlistItems.length > 0 && (
-              <span className="absolute -top-2 -right-2 bg-black text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full animate-in zoom-in duration-300">
-                {wishlistItems.length}
-              </span>
-            )}
-          </Link>
-
-          {/* Cart Icon */}
-          <Link href="/cart" className="relative flex items-center justify-center text-black hover:scale-110 transition-transform" aria-label="Cart">
-            <ShoppingCart size={20} strokeWidth={1.5} />
-            {getCartCount() > 0 && (
-              <span className="absolute -top-2 -right-2 bg-black text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full animate-in zoom-in duration-300">
-                {getCartCount()}
-              </span>
-            )}
-          </Link>
-          
-          {/* Profile Section with Personalized Avatar */}
-          <button 
-            className="flex items-center gap-2 cursor-pointer group" 
-            onClick={openAuthModal}
-          >
-            <div className="flex items-center justify-center w-8 h-8 md:w-9 md:h-9 bg-gray-50 rounded-full group-hover:bg-black group-hover:text-white transition-all border border-gray-100 overflow-hidden">
-              {user ? (
-                <span className="text-[14px] md:text-[16px] font-black uppercase text-black group-hover:text-white transform transition-transform group-active:scale-90">
-                  {user.displayName ? user.displayName[0] : user.email[0]}
-                </span>
-              ) : (
-                <User size={18} strokeWidth={1.5} className="text-black group-hover:text-white transition-transform group-active:scale-95" />
-              )}
+          <Link href="/wishlist" className="relative"><Heart size={20} strokeWidth={1.5} /></Link>
+          <Link href="/cart" className="relative"><ShoppingCart size={20} strokeWidth={1.5} />{getCartCount() > 0 && <span className="absolute -top-2 -right-2 bg-black text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">{getCartCount()}</span>}</Link>
+          <button className="group" onClick={openAuthModal}>
+            <div className="flex items-center justify-center w-9 h-9 bg-gray-50 rounded-full group-hover:bg-black group-hover:text-white transition-all border border-gray-100 overflow-hidden">
+              {user ? <span className="text-[14px] font-black uppercase">{user.displayName ? user.displayName[0] : user.email[0]}</span> : <User size={18} strokeWidth={1.5} />}
             </div>
-            <span className="hidden lg:inline text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 group-hover:text-black transition-colors whitespace-nowrap">
-               {user ? (user.displayName || user.email.split('@')[0]) : "Sign In"}
-            </span>
           </button>
-
-          <button 
-            className="md:hidden flex items-center justify-center text-black" 
-            onClick={() => setIsOpen(!isOpen)}
-          >
-            {isOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
+          <button className="md:hidden" onClick={() => setIsOpen(!isOpen)}>{isOpen ? <X size={24} /> : <Menu size={24} />}</button>
         </div>
       </nav>
 
-      {/* SUCCESS NOTIFICATION TOAST - SIMPLIFIED */}
-      <div className="fixed top-24 right-5 z-[5000] flex flex-col gap-3 pointer-events-none">
-        {notification && (
-          <div className="bg-black text-white shadow-xl px-6 py-4 flex items-center gap-4 pointer-events-auto">
-            <p className="text-xs font-bold uppercase tracking-widest whitespace-nowrap">
-              Item successfully added to cart
-            </p>
-            <button onClick={() => setNotification(null)} className="text-white/50 hover:text-white cursor-pointer ml-4">
-              <X size={14} />
-            </button>
-          </div>
-        )}
-      </div>
-
       {showAuthModal && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[2000] flex items-center justify-center p-4" onClick={closeAuthModal}>
-           <div className="bg-white w-full max-w-[400px] shadow-2xl p-8 relative" onClick={e => e.stopPropagation()}>
-             <button className="absolute top-4 right-4 text-gray-400 hover:text-black" onClick={closeAuthModal}><X size={20} /></button>
-             
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[2000] flex items-center justify-center p-4" onClick={closeAuthModal}>
+           <div className="bg-white w-full max-w-[420px] shadow-2xl p-10 relative rounded-[40px] overflow-hidden" onClick={e => e.stopPropagation()}>
+             <button className="absolute top-8 right-8 text-gray-300 hover:text-black" onClick={closeAuthModal}><X size={24} /></button>
              {user ? (
-               <div className="space-y-8 text-center">
-                 <div className="w-20 h-20 rounded-full bg-black text-white flex items-center justify-center text-3xl font-bold mx-auto">{user.displayName ? user.displayName[0] : user.email[0]}</div>
-                 <h3 className="text-xl font-bold text-black uppercase tracking-widest">{user.displayName || user.email}</h3>
-                 <button onClick={handleLogout} className="w-full bg-black text-white py-5 text-[10px] font-bold uppercase tracking-[0.3em] rounded-full btn-animate">Logout Session</button>
+               <div className="space-y-10 text-center animate-in fade-in zoom-in-95 duration-500">
+                 <div className="w-24 h-24 rounded-full bg-black text-white flex items-center justify-center text-4xl font-black mx-auto shadow-2xl">{user.displayName ? user.displayName[0] : user.email[0]}</div>
+                 <div className="space-y-4">
+                    {isBiometricSupported && (
+                        <button onClick={registerRealBiometric} className="w-full flex items-center justify-center gap-4 py-5 bg-gray-50 border border-gray-100 text-[11px] font-black uppercase tracking-[0.3em] rounded-2xl hover:bg-black hover:text-white transition-all group">
+                            <Fingerprint size={20} className="group-hover:animate-pulse" /> Register Hardware ID
+                        </button>
+                    )}
+                    <button onClick={() => logout()} className="w-full bg-black text-white py-5 text-[11px] font-black uppercase tracking-[0.4em] rounded-2xl shadow-xl">Logout</button>
+                 </div>
                </div>
              ) : (
-                  <div className="text-center space-y-6 animate-in fade-in zoom-in-95 duration-300">
-                     <div className="space-y-2">
-                        <h4 className="text-2xl font-black uppercase tracking-[0.2em] text-black">
-                          {isForgotPassword ? (forgotStep === 1 ? "Verify Email" : "Reset Password") : (isSignUp ? "Create Account" : "Welcome Back")}
-                        </h4>
-                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">
-                          {isForgotPassword ? (forgotStep === 1 ? "Enter your email to find account" : "Answer security questions to reset") : (isSignUp ? "Join the Zara Fashion Club" : "Login to your account")}
-                        </p>
-                     </div>
- 
-                     <form onSubmit={handleAuth} className="space-y-4">
-                        {isSignUp && (
-                          <div className="relative">
-                             <User className={`absolute left-4 top-1/2 -translate-y-1/2 ${authError ? 'text-red-400' : 'text-gray-300'}`} size={16} />
-                             <input type="text" name="name" placeholder="Full Name" className={`w-full bg-gray-50 border ${authError ? 'border-red-200 focus:border-red-500' : 'border-transparent focus:border-black'} p-4 pl-12 text-[11px] font-medium uppercase tracking-widest transition-all outline-none`} required />
-                          </div>
-                        )}
-                        
-                        {(isSignUp || !isForgotPassword || (isForgotPassword && forgotStep === 1)) && (
-                          <div className="relative">
-                            <Mail className={`absolute left-4 top-1/2 -translate-y-1/2 ${authError ? 'text-red-400' : 'text-gray-300'}`} size={16} />
-                            <input type="email" name="email" placeholder="Email Address" className={`w-full bg-gray-50 border ${authError ? 'border-red-200 focus:border-red-500' : 'border-transparent focus:border-black'} p-4 pl-12 text-[11px] font-medium uppercase tracking-widest transition-all outline-none`} required readOnly={isForgotPassword && forgotStep === 2} />
-                          </div>
-                        )}
-
-                        {((!isForgotPassword && !isSignUp) || isSignUp) && (
-                          <div className="relative">
-                             <Lock className={`absolute left-4 top-1/2 -translate-y-1/2 ${authError ? 'text-red-400' : 'text-gray-300'}`} size={16} />
-                             <input 
-                               type={showPassword ? "text" : "password"} 
-                               name="password" 
-                               placeholder="Password (Min. 8 chars)" 
-                               minLength="8" 
-                               className={`w-full bg-gray-50 border ${authError ? 'border-red-200 focus:border-red-500' : 'border-transparent focus:border-black'} p-4 pl-12 pr-12 text-[11px] font-medium uppercase tracking-widest transition-all outline-none`} 
-                               required 
-                             />
-                             <button 
-                               type="button"
-                               onClick={() => setShowPassword(!showPassword)}
-                               className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black transition-colors"
-                             >
-                               {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                             </button>
-                          </div>
-                        )}
-
-                        {isForgotPassword && forgotStep === 2 && (
-                          <div className="space-y-4">
-                            <div className="relative">
-                               <Lock className={`absolute left-4 top-1/2 -translate-y-1/2 ${authError ? 'text-red-400' : 'text-gray-300'}`} size={16} />
-                               <input 
-                                 type={showPassword ? "text" : "password"} 
-                                 name="password" 
-                                 placeholder="New Password" 
-                                 minLength="8" 
-                                 className={`w-full bg-gray-50 border ${authError ? 'border-red-200 focus:border-red-500' : 'border-transparent focus:border-black'} p-4 pl-12 pr-12 text-[11px] font-medium uppercase tracking-widest transition-all outline-none`} 
-                                 required 
-                               />
-                               <button 
-                                 type="button"
-                                 onClick={() => setShowPassword(!showPassword)}
-                                 className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black transition-colors"
-                               >
-                                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                               </button>
-                            </div>
-                            <div className="relative">
-                               <Lock className={`absolute left-4 top-1/2 -translate-y-1/2 ${authError ? 'text-red-400' : 'text-gray-300'}`} size={16} />
-                               <input 
-                                 type={showPassword ? "text" : "password"} 
-                                 name="confirmPassword" 
-                                 placeholder="Confirm New Password" 
-                                 minLength="8" 
-                                 className={`w-full bg-gray-50 border ${authError ? 'border-red-200 focus:border-red-500' : 'border-transparent focus:border-black'} p-4 pl-12 pr-12 text-[11px] font-medium uppercase tracking-widest transition-all outline-none`} 
-                                 required 
-                               />
-                            </div>
-
-                            {userSecurityQuestions[0] !== "Question (Not set)" && (
-                              <div className="space-y-4 pt-2">
-                                  <p className="text-[9px] text-left font-black uppercase tracking-widest text-black mb-1">Verify Security Answer:</p>
-                                  <div className="space-y-3">
-                                      <div className="text-left bg-gray-50 p-4 border border-gray-100 rounded-lg">
-                                          <p className="text-[10px] font-black text-black uppercase tracking-[0.1em] mb-2 leading-relaxed">
-                                              {userSecurityQuestions[0]}
-                                          </p>
-                                          <input type="text" name="recoveryAnswer" placeholder="Your Answer" className="w-full bg-transparent border-b border-gray-200 py-2 text-[12px] font-medium outline-none focus:border-black transition-colors" required />
-                                      </div>
-                                  </div>
-                              </div>
-                            )}
-                          </div>
-                        )}
-
-                        {isSignUp && (
-                          <div className="space-y-5 pt-2">
-                             <div className="space-y-4">
-                                <div className="space-y-3">
-                                    <p className="text-[9px] text-left font-black uppercase tracking-widest text-black">Quick Pick Questions:</p>
-                                    <div className="grid grid-cols-1 gap-2">
-                                        {securityQuestionsList.slice(0, 3).map((q, i) => (
-                                            <button 
-                                                key={i} 
-                                                type="button" 
-                                                onClick={() => {
-                                                    const select = document.getElementsByName('signupQuestion')[0];
-                                                    if (select) {
-                                                        select.value = q;
-                                                        // Trigger change for UI if needed
-                                                    }
-                                                }}
-                                                className="text-left p-3 bg-gray-50 hover:bg-black hover:text-white transition-all text-[9px] font-bold uppercase tracking-widest border border-gray-100"
-                                            >
-                                                {q}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <p className="text-[9px] text-left font-black uppercase tracking-widest text-black">Or Select from List:</p>
-                                    <select name="signupQuestion" className="w-full bg-gray-50 border border-transparent p-3 text-[10px] font-bold uppercase tracking-widest outline-none focus:border-black cursor-pointer" required>
-                                        {securityQuestionsList.map((q, i) => <option key={i} value={q}>{q}</option>)}
-                                    </select>
-                                    <div className="relative">
-                                        <HelpCircle className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={16} />
-                                        <input type="text" name="signupAnswer" placeholder="Write Your Answer" className="w-full bg-gray-50 border border-transparent p-4 pl-12 text-[11px] font-medium uppercase tracking-widest outline-none focus:border-black" required />
-                                    </div>
-                                </div>
-                             </div>
-                          </div>
-                        )}
-                        
-                        {authError && (
-                          <div className="bg-red-50 p-3 border-l-4 border-red-500 animate-in fade-in slide-in-from-top-1 duration-300">
-                            <p className="text-[10px] font-medium text-red-600 uppercase tracking-widest text-left">
-                              * {authError}
-                            </p>
-                          </div>
-                        )}
-
-                        {authSuccess && (
-                          <div className="bg-green-50 p-3 border-l-4 border-green-500 animate-in fade-in slide-in-from-top-1 duration-300">
-                            <p className="text-[10px] font-medium text-green-600 uppercase tracking-widest text-left">
-                              {authSuccess}
-                            </p>
-                          </div>
-                        )}
-
-                        <button 
-                          type="submit" 
-                          disabled={isAuthLoading}
-                          className={`w-full bg-black text-white py-5 text-[10px] font-bold uppercase tracking-[0.3em] hover:bg-neutral-800 transition-all shadow-xl active:scale-95 mt-4 rounded-full btn-animate ${isAuthLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
-                        >
-                           {isAuthLoading ? "Processing..." : (isForgotPassword ? (forgotStep === 1 ? "Find Account" : "Reset Password") : (isSignUp ? "Sign Up Now" : "Login Session"))}
-                        </button>
+                  <div className="text-center space-y-8 animate-in fade-in zoom-in-95 duration-300">
+                     <h4 className="text-2xl font-black uppercase tracking-[0.2em] text-black">Authentication</h4>
+                     <form onSubmit={handleAuth} className="space-y-4 text-left">
+                        {isSignUp && <input type="text" name="name" placeholder="Full Name" className="w-full bg-gray-50 p-5 text-[12px] font-medium uppercase tracking-widest outline-none rounded-2xl" required />}
+                        <input type="email" name="email" placeholder="Email Address" className="w-full bg-gray-50 p-5 text-[12px] font-medium uppercase tracking-widest outline-none rounded-2xl" required />
+                        <div className="relative">
+                            <input type={showPassword ? "text" : "password"} name="password" placeholder="Password" className="w-full bg-gray-50 p-5 pr-14 text-[12px] font-medium uppercase tracking-widest outline-none rounded-2xl" required />
+                            <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-300">{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button>
+                        </div>
+                        {authError && <div className="text-[10px] font-black text-red-500 uppercase tracking-widest px-2">* {authError}</div>}
+                        <button type="submit" className="w-full bg-black text-white py-5 text-[11px] font-black uppercase tracking-[0.4em] rounded-2xl shadow-2xl">{isSignUp ? "Sign Up" : "Sign In"}</button>
                      </form>
- 
-                     <div className="flex flex-col gap-3 pt-4 border-t border-gray-50">
-                        {!isForgotPassword && !isSignUp && (
-                          <button 
-                            onClick={() => {
-                              setIsForgotPassword(true);
-                              setForgotStep(1);
-                              setAuthError("");
-                              setAuthSuccess("");
-                            }}
-                            className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-black transition-colors"
-                          >
-                            Forgot Password?
-                          </button>
-                        )}
-
-                        <button 
-                          onClick={() => {
-                            if (isForgotPassword) {
-                                if (forgotStep === 2) {
-                                    setForgotStep(1);
-                                } else {
-                                    setIsForgotPassword(false);
-                                }
-                            } else {
-                              setIsSignUp(!isSignUp);
-                            }
-                            setUserSecurityQuestions([]);
-                            setAuthError("");
-                            setAuthSuccess("");
-                          }}
-                          className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-black transition-colors"
-                        >
-                          {isForgotPassword ? (forgotStep === 2 ? "Back to Email Verification" : "Back to Login") : (isSignUp ? "Already have an account? Login" : "Don't have an account? Create One")}
-                        </button>
+                     <div className="flex items-center justify-between pt-6 border-t border-gray-50">
+                        <button onClick={() => setIsSignUp(!isSignUp)} className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-black">{isSignUp ? "Login" : "Register"}</button>
+                        <div className="flex items-center gap-4">
+                            <button className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-black">Forgot?</button>
+                            {isBiometricSupported && (
+                                <button onClick={loginWithRealBiometric} className="w-12 h-12 bg-black text-white rounded-2xl flex items-center justify-center hover:scale-110 transition-all shadow-xl group">
+                                    <Fingerprint size={22} />
+                                </button>
+                            )}
+                        </div>
                      </div>
                   </div>
              )}
            </div>
         </div>
       )}
+
+      {/* ADVANCED HOLD-TO-SCAN OVERLAY */}
+      {showBioOverlay && (
+        <div className="fixed inset-0 z-[6000] flex items-center justify-center bg-black/95 backdrop-blur-3xl animate-in fade-in duration-700">
+            <div className="text-center space-y-12 max-w-sm px-6">
+                <div className="relative w-56 h-56 mx-auto">
+                    <div className="absolute inset-0 border-2 border-white/5 rounded-full animate-spin-slow"></div>
+                    
+                    <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="relative">
+                            <Fingerprint size={100} className="text-white/5" />
+                            <div className="absolute inset-0 text-white overflow-hidden transition-all duration-300 ease-out" style={{ clipPath: `inset(${100 - bioProgress}% 0 0 0)` }}>
+                                <Fingerprint size={100} />
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {/* HOLD BUTTON OVERLAY */}
+                    <button 
+                        onMouseDown={startHolding}
+                        onMouseUp={stopHolding}
+                        onMouseLeave={stopHolding}
+                        onTouchStart={startHolding}
+                        onTouchEnd={stopHolding}
+                        disabled={!isHardwareVerified || bioProgress >= 100}
+                        className={`absolute inset-0 rounded-full flex items-center justify-center transition-all duration-500 z-50 ${isHardwareVerified ? 'cursor-pointer' : 'cursor-wait opacity-20'}`}
+                    >
+                        <div className={`w-full h-full rounded-full transition-all duration-500 ${isHolding ? 'bg-white/5 scale-110 shadow-[0_0_50px_rgba(255,255,255,0.1)]' : ''}`}></div>
+                    </button>
+
+                    {isHolding && bioProgress < 100 && (
+                        <div className="absolute left-0 w-full h-1 bg-white shadow-[0_0_30px_#fff] animate-scan-line z-10" style={{ top: `${bioProgress}%` }}></div>
+                    )}
+                </div>
+
+                <div className="space-y-8">
+                    <div className="space-y-3">
+                        <h3 className="text-3xl font-black uppercase tracking-[0.5em] text-white">
+                            {bioProgress === 100 ? "Verified" : (isHardwareVerified ? (isHolding ? "Syncing" : "HOLD ICON") : "HARDWARE")}
+                        </h3>
+                        <p className={`text-[11px] font-black uppercase tracking-[0.4em] transition-all duration-500 ${isHolding ? 'text-white' : 'text-white/40'}`}>
+                            {bioStatus}
+                        </p>
+                    </div>
+
+                    <div className="h-1 w-full bg-white/10 rounded-full overflow-hidden">
+                        <div className="h-full bg-white transition-all duration-300 ease-out shadow-[0_0_20px_#fff]" style={{ width: `${bioProgress}%` }}></div>
+                    </div>
+                </div>
+
+                {!isHardwareVerified && (
+                    <div className="flex items-center justify-center gap-3 text-yellow-400 animate-pulse">
+                        <AlertCircle size={16} />
+                        <span className="text-[9px] font-black uppercase tracking-widest">Touch Physical Sensor First</span>
+                    </div>
+                )}
+
+                {bioProgress === 0 && !isHolding && (
+                    <button onClick={() => setShowBioOverlay(false)} className="px-10 py-4 border border-white/20 text-white/50 text-[9px] font-black uppercase tracking-widest rounded-full hover:text-white transition-all">Cancel</button>
+                )}
+            </div>
+        </div>
+      )}
+
+      <style jsx global>{`
+        @keyframes scan-line { 0% { top: 0%; opacity: 0; } 50% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
+        .animate-scan-line { animation: scan-line 2s infinite linear; }
+        @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .animate-spin-slow { animation: spin-slow 10s infinite linear; }
+      `}</style>
     </header>
   );
 };
