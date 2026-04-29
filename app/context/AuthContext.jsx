@@ -17,7 +17,7 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  const signup = async (email, password, displayName, securityAnswers = []) => {
+  const signup = async (email, password, displayName) => {
     // Simulate a delay
     await new Promise(resolve => setTimeout(resolve, 800));
 
@@ -31,8 +31,7 @@ export const AuthProvider = ({ children }) => {
       uid: Date.now().toString(),
       email, 
       password, 
-      displayName,
-      securityQuestions: securityAnswers // This will now be an array of {question, answer}
+      displayName
     };
     users.push(newUser);
     localStorage.setItem('zara_users', JSON.stringify(users));
@@ -63,7 +62,7 @@ export const AuthProvider = ({ children }) => {
     return userExists;
   };
 
-  const resetPassword = async (email, newPassword, securityAnswers = []) => {
+  const resetPassword = async (email, newPassword) => {
     // Simulate a delay
     await new Promise(resolve => setTimeout(resolve, 800));
 
@@ -72,18 +71,6 @@ export const AuthProvider = ({ children }) => {
 
     if (userIndex === -1) {
       throw new Error("No account found with this email.");
-    }
-
-    const savedUser = users[userIndex];
-    
-    // Verify security answers if they exist
-    if (savedUser.securityQuestions && savedUser.securityQuestions.length > 0) {
-      const match = savedUser.securityQuestions.every((qObj, idx) => 
-        qObj.answer.toLowerCase().trim() === securityAnswers[idx]?.toLowerCase().trim()
-      );
-      if (!match) {
-        throw new Error("Security answers are incorrect.");
-      }
     }
 
     users[userIndex].password = newPassword;
