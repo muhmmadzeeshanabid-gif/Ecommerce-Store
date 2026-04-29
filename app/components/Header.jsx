@@ -197,7 +197,7 @@ const Header = () => {
              {isDropdownOpen && <div className="absolute top-full left-1/2 -translate-x-1/2 w-52 bg-white border border-gray-100 shadow-xl p-6"><div className="flex flex-col gap-3">{categories.map(cat => <Link key={cat.id} href={`/categories/${cat.slug}`} className="text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:text-black">{cat.name}</Link>)}</div></div>}
           </li>
           <li><Link href="/products" className="text-xs uppercase tracking-wider font-bold">Latest</Link></li>
-          <li><Link href="/contact" className="text-xs uppercase tracking-wider font-bold">Contact Us</Link></li>
+          <li><Link href="#footer" className="text-xs uppercase tracking-wider font-bold">Contact Us</Link></li>
         </ul>
 
         <div className="flex-1 flex items-center justify-end gap-6">
