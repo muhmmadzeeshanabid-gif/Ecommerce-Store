@@ -8,8 +8,8 @@ import ProductCard from './components/ProductCard';
 const sliderData = [
   {
     id: 1,
-    image: "/hero_couple.png",
-    badge: "The New Season",
+    image: "/hero_final_1.png",
+    badge: "Exclusive Collection",
     titleLine1: "Find Cloth",
     titleLine2: "That Matches",
     titleLine3: "Your Style",
@@ -23,8 +23,8 @@ const sliderData = [
   },
   {
     id: 2,
-    image: "/hero_girls.png",
-    badge: "Lifestyle Collection",
+    image: "/hero_final_2.png",
+    badge: "Flagship Store",
     titleLine1: "Discover",
     titleLine2: "Elegance For",
     titleLine3: "Every Occasion",
@@ -38,8 +38,8 @@ const sliderData = [
   },
   {
     id: 3,
-    image: "/hero_store.png",
-    badge: "Boutique Experience",
+    image: "/hero_final_3.png",
+    badge: "Premium Accessories",
     titleLine1: "Timeless",
     titleLine2: "Elegance &",
     titleLine3: "Grace",
