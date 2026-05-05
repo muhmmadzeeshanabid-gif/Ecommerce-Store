@@ -12,7 +12,8 @@ import {
     ShieldCheck, 
     ChevronRight,
     Loader2,
-    Banknote
+    Banknote,
+    Check
 } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
@@ -22,46 +23,50 @@ import StripePaymentForm from '../components/StripePaymentForm';
 const STRIPE_PK = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 const stripePromise = loadStripe(STRIPE_PK);
 
-const FloatingInput = ({ label, name, value, onChange, error }) => {
+const CustomInput = ({ label, name, value, onChange, error, placeholder }) => {
     return (
-        <div className="relative group">
-            <input
-                type="text"
-                name={name}
-                value={value}
-                onChange={onChange}
-                placeholder=" "
-                className={`block px-6 py-5 w-full text-[15px] font-medium text-black bg-white border appearance-none focus:outline-none focus:ring-0 peer transition-all duration-300 rounded-2xl ${error ? 'border-red-400 focus:border-red-500' : 'border-neutral-100 focus:border-black'}`}
-            />
-            <label className="absolute text-[11px] font-bold text-zinc-500 uppercase tracking-widest duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white px-2 peer-focus:px-2 peer-focus:text-black peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 left-4 pointer-events-none">
+        <div className="space-y-2">
+            <label className="block text-[11px] font-bold text-zinc-900 uppercase tracking-widest pl-1">
                 {label}
             </label>
-            {error && <p className="text-[9px] font-medium text-red-400 uppercase tracking-widest mt-1.5 pl-2">{error}</p>}
+            <div className="relative group">
+                <input
+                    type="text"
+                    name={name}
+                    value={value}
+                    onChange={onChange}
+                    placeholder={placeholder}
+                    className={`block px-6 py-4 w-full text-[15px] font-medium text-black bg-white border appearance-none focus:outline-none focus:ring-0 transition-all duration-300 rounded-2xl placeholder:text-zinc-300 ${error ? 'border-red-400 focus:border-red-500' : 'border-neutral-100 focus:border-black'}`}
+                />
+                {error && <p className="text-[9px] font-medium text-red-400 uppercase tracking-widest mt-1.5 pl-2">{error}</p>}
+            </div>
         </div>
     );
 };
 
-const FloatingSelect = ({ label, options, name, value, onChange, error }) => {
+const CustomSelect = ({ label, options, name, value, onChange, error }) => {
     return (
-        <div className="relative group">
-            <select
-                name={name}
-                value={value}
-                onChange={onChange}
-                className={`block px-6 py-5 w-full text-[15px] font-medium text-black bg-white border appearance-none focus:outline-none focus:ring-0 peer transition-all duration-300 rounded-2xl ${error ? 'border-red-400 focus:border-red-500' : 'border-neutral-100 focus:border-black'}`}
-            >
-                <option value="" disabled className="text-zinc-200">Select City</option>
-                {options.map((option, idx) => (
-                    <option key={idx} value={option} className="text-black font-medium">{option}</option>
-                ))}
-            </select>
-            <label className="absolute text-[11px] font-bold text-zinc-500 uppercase tracking-widest duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white px-2 left-4 pointer-events-none">
+        <div className="space-y-2">
+            <label className="block text-[11px] font-bold text-zinc-900 uppercase tracking-widest pl-1">
                 {label}
             </label>
-            <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-300">
-                <ChevronLeft size={16} className="-rotate-90" />
+            <div className="relative group">
+                <select
+                    name={name}
+                    value={value}
+                    onChange={onChange}
+                    className={`block px-6 py-4 w-full text-[15px] font-medium text-black bg-white border appearance-none focus:outline-none focus:ring-0 transition-all duration-300 rounded-2xl ${error ? 'border-red-400 focus:border-red-500' : 'border-neutral-100 focus:border-black'}`}
+                >
+                    <option value="" disabled className="text-zinc-200">Select City</option>
+                    {options.map((option, idx) => (
+                        <option key={idx} value={option} className="text-black font-medium">{option}</option>
+                    ))}
+                </select>
+                <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-300">
+                    <ChevronLeft size={16} className="-rotate-90" />
+                </div>
+                {error && <p className="text-[9px] font-medium text-red-400 uppercase tracking-widest mt-1.5 pl-2">{error}</p>}
             </div>
-            {error && <p className="text-[9px] font-medium text-red-400 uppercase tracking-widest mt-1.5 pl-2">{error}</p>}
         </div>
     );
 };
@@ -88,6 +93,9 @@ export default function CheckoutPage() {
 
     const [hasFetchedSecret, setHasFetchedSecret] = useState(false);
     const [isHydrated, setIsHydrated] = useState(false);
+    const [isPaymentComplete, setIsPaymentComplete] = useState(false);
+
+    const isStep1Complete = Boolean(formData.firstName && formData.lastName && formData.address && formData.city && formData.phone);
 
     // Handle Hydration
     useEffect(() => {
@@ -257,37 +265,41 @@ export default function CheckoutPage() {
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
                     
-                    {/* LEFT: FORM */}
                     <div className="lg:col-span-8">
                         <div className="space-y-10">
                             
-                            {/* STEP 1: SHIPPING */}
                             <div className="bg-white border border-neutral-100 p-10 shadow-sm space-y-10">
                                 <div className="flex items-center gap-6">
-                                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-[14px] font-bold bg-black text-white shadow-xl hover:scale-110 transition-all duration-500 cursor-default group-hover:bg-zinc-800 animate-in fade-in zoom-in duration-1000">
-                                        01
+                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-[14px] font-bold transition-all duration-500 shadow-xl ${isStep1Complete ? 'bg-green-500 text-white' : 'bg-black text-white'}`}>
+                                        {isStep1Complete ? <Check size={20} strokeWidth={3} /> : "01"}
                                     </div>
-                                    <p className="text-[14px] font-medium uppercase tracking-[0.4em] text-black">Shipping Details</p>
+                                    <div className="flex flex-col">
+                                        <p className="text-[14px] font-medium uppercase tracking-[0.4em] text-black">Shipping Details</p>
+                                        {isStep1Complete && <span className="text-[9px] text-green-600 font-bold uppercase tracking-widest animate-in fade-in slide-in-from-left-2">Information Ready</span>}
+                                    </div>
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                    <FloatingInput label="Your First Name" name="firstName" value={formData.firstName} onChange={handleInputChange} error={fieldErrors.firstName} />
-                                    <FloatingInput label="Your Last Name" name="lastName" value={formData.lastName} onChange={handleInputChange} error={fieldErrors.lastName} />
+                                    <CustomInput label="Your First Name" name="firstName" value={formData.firstName} onChange={handleInputChange} error={fieldErrors.firstName} placeholder="John" />
+                                    <CustomInput label="Your Last Name" name="lastName" value={formData.lastName} onChange={handleInputChange} error={fieldErrors.lastName} placeholder="Doe" />
                                     <div className="md:col-span-2">
-                                        <FloatingInput label="Global Shipping Address" name="address" value={formData.address} onChange={handleInputChange} error={fieldErrors.address} />
+                                        <CustomInput label="Global Shipping Address" name="address" value={formData.address} onChange={handleInputChange} error={fieldErrors.address} placeholder="123 Luxury Street, Apt 4B" />
                                     </div>
-                                    <FloatingSelect label="City / Region" options={cities} name="city" value={formData.city} onChange={handleInputChange} error={fieldErrors.city} />
-                                    <FloatingInput label="Active Phone Number" name="phone" value={formData.phone} onChange={handleInputChange} error={fieldErrors.phone} />
+                                    <CustomSelect label="City / Region" options={cities} name="city" value={formData.city} onChange={handleInputChange} error={fieldErrors.city} />
+                                    <CustomInput label="Active Phone Number" name="phone" value={formData.phone} onChange={handleInputChange} error={fieldErrors.phone} placeholder="+92 300 1234567" />
                                 </div>
                             </div>
 
                             {/* STEP 2: PAYMENT */}
                             <div className="bg-white border border-neutral-100 p-10 shadow-sm space-y-10">
                                 <div className="flex items-center gap-6 pb-6 border-b border-gray-50">
-                                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-[14px] font-bold bg-black text-white shadow-xl hover:scale-110 transition-all duration-500 cursor-default group-hover:bg-zinc-800 animate-in fade-in zoom-in duration-1000">
-                                        02
+                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-[14px] font-bold transition-all duration-500 shadow-xl ${isPaymentComplete ? 'bg-green-500 text-white' : 'bg-black text-white'}`}>
+                                        {isPaymentComplete ? <Check size={20} strokeWidth={3} /> : "02"}
                                     </div>
-                                    <p className="text-[14px] font-medium uppercase tracking-[0.4em] text-black">Payment Method</p>
+                                    <div className="flex flex-col">
+                                        <p className="text-[14px] font-medium uppercase tracking-[0.4em] text-black">Payment Method</p>
+                                        {isPaymentComplete && <span className="text-[9px] text-green-600 font-bold uppercase tracking-widest animate-in fade-in slide-in-from-left-2">Secure Details Ready</span>}
+                                    </div>
                                 </div>
 
                                 {/* Selection Buttons */}
@@ -325,13 +337,8 @@ export default function CheckoutPage() {
                                                 <Elements stripe={stripePromise} options={{ clientSecret }}>
                                                     <StripePaymentForm 
                                                         clientSecret={clientSecret}
-                                                        isStep1Complete={
-                                                            formData.firstName && 
-                                                            formData.lastName && 
-                                                            formData.address && 
-                                                            formData.city && 
-                                                            formData.phone
-                                                        }
+                                                        isStep1Complete={isStep1Complete}
+                                                        onCardComplete={(complete) => setIsPaymentComplete(complete)}
                                                         onSuccess={() => {
                                                             clearCart();
                                                             router.push('/order-success');
