@@ -5,8 +5,8 @@ export async function POST(request) {
   try {
     const secretKey = process.env.STRIPE_SECRET_KEY;
     if (!secretKey) {
-      console.error("STRIPE_SECRET_KEY is not defined");
-      return NextResponse.json({ error: "Stripe configuration missing" }, { status: 500 });
+      console.error("CRITICAL ERROR: STRIPE_SECRET_KEY is missing in environment variables.");
+      return NextResponse.json({ error: "Stripe configuration missing (STRIPE_SECRET_KEY)" }, { status: 500 });
     }
 
     const stripe = new Stripe(secretKey);
