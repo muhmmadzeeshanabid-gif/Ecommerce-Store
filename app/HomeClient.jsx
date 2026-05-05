@@ -23,8 +23,10 @@ const HomeClient = ({ featuredProducts, brands }) => {
                 </p>
               </div>
               
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black text-black leading-tight uppercase tracking-tighter hero-text-reveal hero-text-reveal-delay-1 whitespace-nowrap">
-                Find Cloth <span className="font-playfair italic font-medium text-neutral-400">That Matches</span> Your Style
+              <h1 className="text-4xl sm:text-5xl md:text-8xl font-black text-black leading-[0.9] uppercase tracking-tighter hero-text-reveal hero-text-reveal-delay-1">
+                Find Cloth <br />
+                <span className="font-playfair italic font-medium text-neutral-400 whitespace-nowrap">That Matches</span> <br />
+                Your Style
               </h1>
             </div>
             
