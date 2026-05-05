@@ -87,8 +87,16 @@ export default function CheckoutPage() {
     const cities = ['Lahore', 'Karachi', 'Islamabad', 'Faisalabad', 'Multan', 'Rawalpindi', 'Gujranwala', 'Peshawar', 'Quetta', 'Sialkot'];
 
     const [hasFetchedSecret, setHasFetchedSecret] = useState(false);
+    const [isHydrated, setIsHydrated] = useState(false);
+
+    // Handle Hydration
+    useEffect(() => {
+        setIsHydrated(true);
+    }, []);
 
     useEffect(() => {
+        if (!isHydrated) return; // Wait for hydration
+
         if (cartItems.length === 0) {
             router.push('/cart');
             return;
@@ -97,7 +105,7 @@ export default function CheckoutPage() {
         // Only fetch if we need card payment and haven't fetched yet
         if (paymentMethod === 'card' && !hasFetchedSecret) {
             const total = getCartTotal();
-            console.log("Initializing secure gateway via local API for amount:", total);
+            console.log("Initializing secure gateway...");
             
             fetch('/api/create-payment-intent', {
                 method: 'POST',
