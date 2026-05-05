@@ -54,7 +54,19 @@ const CartPage = () => {
           
           {/* 1. CART ITEMS LIST */}
           <div className="flex-grow space-y-4">
-            <h1 className="text-3xl font-medium uppercase tracking-tight text-black border-b border-gray-200 pb-6">Your Shopping Bag</h1>
+        <div className="flex flex-col items-center justify-center mb-10 md:mb-12 mt-4 text-center px-4">
+          <h1 className="text-4xl md:text-6xl font-playfair italic font-medium text-zinc-900 tracking-tight leading-none mb-4">
+            Shopping Bag
+          </h1>
+          <div className="flex items-center justify-center w-full max-w-sm gap-4 mb-4">
+            <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent to-zinc-400"></div>
+            <div className="w-2 h-2 rotate-45 bg-zinc-800 outline outline-offset-2 outline-1 outline-zinc-300"></div>
+            <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent to-zinc-400"></div>
+          </div>
+          <span className="text-[10px] md:text-xs font-semibold tracking-[0.4em] text-zinc-400 uppercase">
+            Your Selected Items
+          </span>
+        </div>
             
             <div className="space-y-4">
               {cartItems.map((item) => (

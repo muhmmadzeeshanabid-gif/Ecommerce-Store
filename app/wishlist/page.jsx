@@ -13,26 +13,18 @@ const WishlistPage = () => {
     <div className="bg-[#FAF9F6] min-h-screen pt-24 pb-20">
       <div className="container mx-auto px-6 lg:px-20">
         
-        {/* Header Section - Reordered */}
-        <div className="flex flex-col gap-6 mb-16 border-b border-gray-100 pb-12">
-          <div className="flex">
-            <Link href="/products" className="inline-flex items-center gap-3 px-8 py-3 bg-black text-white text-[10px] font-black uppercase tracking-[0.2em] hover:bg-neutral-800 transition-all rounded-full shadow-lg group btn-animate">
-               <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
-               Continue Shopping
-            </Link>
+        <div className="flex flex-col items-center justify-center mb-8 md:mb-10 mt-4 text-center px-4">
+          <h1 className="text-5xl md:text-[80px] font-playfair italic font-medium text-zinc-900 tracking-tight leading-none mb-4">
+            My Wishlist
+          </h1>
+          <div className="flex items-center justify-center w-full max-w-sm gap-4 mb-4">
+            <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent to-zinc-400"></div>
+            <div className="w-2 h-2 rotate-45 bg-zinc-800 outline outline-offset-2 outline-1 outline-zinc-300"></div>
+            <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent to-zinc-400"></div>
           </div>
-
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <span className="w-10 h-px bg-black"></span>
-              <p className="text-[10px] font-bold tracking-[0.4em] text-neutral-400 uppercase">
-                Collection / Favorites
-              </p>
-            </div>
-            <h1 className="text-5xl md:text-7xl font-black text-black uppercase tracking-tighter leading-none">
-              My Wishlist
-            </h1>
-          </div>
+          <span className="text-[10px] md:text-xs font-semibold tracking-[0.4em] text-zinc-400 uppercase">
+            Your Personal Favorites
+          </span>
         </div>
 
         {/* Content Section */}

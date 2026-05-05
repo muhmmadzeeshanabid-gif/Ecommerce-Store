@@ -233,15 +233,18 @@ export default function CheckoutPage() {
         <div className="bg-[#FAF9F6] min-h-screen pt-28 pb-40 font-inter">
             <div className="container mx-auto px-6 lg:px-20 max-w-7xl">
                 
-                {/* NAV */}
-                <div className="flex flex-col md:flex-row items-center justify-between mb-16 border-b border-gray-100 pb-10 gap-8">
-                    <div className="w-full md:w-auto flex justify-start">
-                        <Link href="/cart" className="btn-animate flex items-center gap-3 px-8 py-3.5 bg-black text-white text-[10px] font-medium uppercase tracking-[0.3em] transition-all rounded-full shadow-lg">
-                            <ChevronLeft size={16} /> Back to Bag
-                        </Link>
+                <div className="flex flex-col items-center justify-center mb-8 md:mb-10 mt-4 text-center px-4">
+                    <h1 className="text-4xl md:text-6xl font-playfair italic font-medium text-zinc-900 tracking-tight leading-none mb-4">
+                        Secure Checkout
+                    </h1>
+                    <div className="flex items-center justify-center w-full max-w-sm gap-4 mb-4">
+                        <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent to-zinc-400"></div>
+                        <div className="w-2 h-2 rotate-45 bg-zinc-800 outline outline-offset-2 outline-1 outline-zinc-300"></div>
+                        <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent to-zinc-400"></div>
                     </div>
-                    <h2 className="text-4xl md:text-5xl font-medium uppercase tracking-tighter text-black text-center md:absolute md:left-1/2 md:-translate-x-1/2">Checkout</h2>
-                    <div className="hidden md:block w-32"></div>
+                    <span className="text-[10px] md:text-xs font-semibold tracking-[0.4em] text-zinc-400 uppercase">
+                        Finalize Your Order
+                    </span>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
@@ -251,9 +254,9 @@ export default function CheckoutPage() {
                         <div className="space-y-10">
                             
                             {/* STEP 1: SHIPPING */}
-                            <div className="bg-white border border-neutral-100 p-10 rounded-[32px] shadow-sm space-y-10">
+                            <div className="bg-white border border-neutral-100 p-10 shadow-sm space-y-10">
                                 <div className="flex items-center gap-6">
-                                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-[13px] font-medium bg-black text-white shadow-lg rotate-3">
+                                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-[14px] font-bold bg-black text-white shadow-xl hover:scale-110 transition-all duration-500 cursor-default group-hover:bg-zinc-800 animate-in fade-in zoom-in duration-1000">
                                         01
                                     </div>
                                     <p className="text-[14px] font-medium uppercase tracking-[0.4em] text-black">Shipping Details</p>
@@ -271,9 +274,9 @@ export default function CheckoutPage() {
                             </div>
 
                             {/* STEP 2: PAYMENT */}
-                            <div className="bg-white border border-neutral-100 p-10 rounded-[32px] shadow-sm space-y-10">
+                            <div className="bg-white border border-neutral-100 p-10 shadow-sm space-y-10">
                                 <div className="flex items-center gap-6 pb-6 border-b border-gray-50">
-                                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-[13px] font-medium bg-black text-white shadow-lg -rotate-3">
+                                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-[14px] font-bold bg-black text-white shadow-xl hover:scale-110 transition-all duration-500 cursor-default group-hover:bg-zinc-800 animate-in fade-in zoom-in duration-1000">
                                         02
                                     </div>
                                     <p className="text-[14px] font-medium uppercase tracking-[0.4em] text-black">Payment Method</p>
@@ -341,7 +344,7 @@ export default function CheckoutPage() {
 
                     {/* RIGHT: SUMMARY */}
                     <div className="lg:col-span-4 lg:sticky lg:top-32">
-                        <div className="bg-white border border-gray-100 p-10 space-y-10 rounded-[32px] shadow-sm">
+                        <div className="bg-white border border-gray-100 p-10 space-y-10 shadow-sm">
                             <div className="space-y-2 text-center pb-6 border-b border-gray-50">
                                 <h3 className="text-[11px] font-medium uppercase tracking-[0.4em] text-black">Order Summary</h3>
                                 <p className="text-[9px] font-medium text-zinc-300 uppercase tracking-widest">Premium Logistics & Secure Checkout</p>
@@ -390,17 +393,6 @@ export default function CheckoutPage() {
                             </div>
                         </div>
 
-                        <div className="mt-6 flex flex-col items-center gap-4">
-                            <div className="flex items-center gap-3 text-black">
-                                <ShieldCheck size={18} strokeWidth={2.5} />
-                                <span className="text-[10px] font-medium uppercase tracking-[0.3em]">Encrypted Payment</span>
-                            </div>
-                            <div className="flex items-center gap-4 w-full text-zinc-100">
-                                <div className="h-px flex-1 bg-gray-100"></div>
-                                <span className="text-[8px] font-medium uppercase tracking-[0.3em] text-zinc-200 text-center">Your security is our priority</span>
-                                <div className="h-px flex-1 bg-gray-100"></div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>

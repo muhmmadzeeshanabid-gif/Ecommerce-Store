@@ -31,7 +31,7 @@ const Footer = () => {
 
           {/* Column 1: Brand */}
           <div className="sm:col-span-2 lg:col-span-1 space-y-8">
-            <Link href="/" className="text-2xl font-medium tracking-[0.2em] uppercase text-black block">
+            <Link href="/" className="text-3xl font-playfair italic font-black tracking-tighter uppercase text-black block">
               Zara
             </Link>
             <p className="text-sm text-neutral-400 leading-relaxed font-light max-w-[220px]">

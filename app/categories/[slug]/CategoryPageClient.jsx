@@ -32,22 +32,18 @@ const CategoryPageClient = ({ initialData, slug }) => {
   return (
     <div className="bg-[#FAF9F6] min-h-screen pt-24 pb-20">
       <main className="container mx-auto px-6 py-12">
-        {/* Header Section */}
-        <div className="mb-12 space-y-4">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-px bg-black/10"></div>
-            <p className="text-[10px] font-bold tracking-[0.4em] text-neutral-400 uppercase">
-              Category Collection / 2026
-            </p>
-          </div>
-          <h1 className="text-4xl md:text-6xl font-black text-black uppercase tracking-tighter leading-none mb-4">
+        <div className="flex flex-col items-center justify-center mb-8 md:mb-10 mt-4 text-center px-4">
+          <h1 className="text-5xl md:text-[70px] font-playfair italic font-medium text-zinc-900 tracking-tight leading-none mb-4">
             {category ? category.name : 'Category'}
           </h1>
-          {category?.description && (
-            <p className="max-w-md text-neutral-500 text-sm font-light leading-relaxed">
-              {category.description}
-            </p>
-          )}
+          <div className="flex items-center justify-center w-full max-w-sm gap-4 mb-4">
+            <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent to-zinc-400"></div>
+            <div className="w-2 h-2 rotate-45 bg-zinc-800 outline outline-offset-2 outline-1 outline-zinc-300"></div>
+            <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent to-zinc-400"></div>
+          </div>
+          <span className="text-[10px] md:text-xs font-semibold tracking-[0.4em] text-zinc-400 uppercase">
+            {category?.description || 'Curated Selection 2026'}
+          </span>
         </div>
 
         {/* STICKY CATEGORY FILTERS below Heading */}

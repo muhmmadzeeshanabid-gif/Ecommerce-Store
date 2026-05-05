@@ -65,32 +65,68 @@ const Header = () => {
   };
 
   return (
-    <header className="fixed top-0 left-0 w-full z-[1000] bg-white border-b border-gray-200 h-20 flex items-center font-inter text-black">
-      <nav className="w-full max-w-7xl mx-auto px-4 md:px-8 flex items-center">
-        <div className="flex-1 flex justify-start">
-          <Link href="/" className="text-2xl font-medium tracking-[0.2em] uppercase">Zara</Link>
+    <header className="fixed top-0 left-0 w-full z-[1000] bg-white border-b border-gray-100 h-20 flex items-center font-inter text-black">
+      <nav className="container mx-auto px-6 lg:px-20 flex items-center justify-between">
+        
+        {/* LOGO: Keep the refined style */}
+        <div className="flex-1">
+          <Link href="/" className="inline-block">
+            <span className="text-3xl font-playfair italic font-black tracking-tighter uppercase">
+              Zara
+            </span>
+          </Link>
         </div>
 
-        <ul className={`flex list-none flex-col md:flex-row gap-8 md:gap-10 fixed md:static top-20 md:top-0 left-0 w-full md:w-auto h-[calc(100vh-80px)] md:h-auto bg-black md:bg-transparent items-start md:items-center justify-start md:justify-center pt-8 md:pt-0 px-8 md:px-0 transition-all duration-300 z-[1500] ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0 hidden md:flex'}`}>
-          <li><Link href="/" className="text-xs uppercase tracking-wider font-medium">Home</Link></li>
-          <li className="relative group" onMouseEnter={() => window.innerWidth > 768 && setIsDropdownOpen(true)} onMouseLeave={() => window.innerWidth > 768 && setIsDropdownOpen(false)}>
-             <button className="flex items-center gap-1.5 text-xs uppercase tracking-wider font-medium">Categories <ChevronDown size={12} /></button>
-             {isDropdownOpen && <div className="absolute top-full left-1/2 -translate-x-1/2 w-52 bg-white border border-gray-100 shadow-xl p-6"><div className="flex flex-col gap-3">{categories.map(cat => <Link key={cat.id} href={`/categories/${cat.slug}`} className="text-[10px] font-medium uppercase tracking-widest text-zinc-400 hover:text-black">{cat.name}</Link>)}</div></div>}
+        {/* NAVIGATION: Revert to simple links */}
+        <ul className={`flex list-none flex-col md:flex-row gap-8 md:gap-10 fixed md:static top-20 md:top-0 left-0 w-full md:w-auto h-[calc(100vh-80px)] md:h-auto bg-white md:bg-transparent items-start md:items-center justify-start md:justify-center pt-8 md:pt-0 px-8 md:px-0 transition-all duration-300 z-[1500] ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0 hidden md:flex'}`}>
+          <li className="flex items-center">
+            <Link href="/" className="text-[12px] uppercase tracking-[0.2em] font-bold hover:text-zinc-400 transition-colors py-2">Home</Link>
           </li>
-          <li><Link href="/products" className="text-xs uppercase tracking-wider font-medium">Latest</Link></li>
-          <li><Link href="#footer" className="text-xs uppercase tracking-wider font-medium">Contact Us</Link></li>
+          <li className="relative group flex items-center" onMouseEnter={() => window.innerWidth > 768 && setIsDropdownOpen(true)} onMouseLeave={() => window.innerWidth > 768 && setIsDropdownOpen(false)}>
+             <button className="flex items-center gap-1.5 text-[12px] uppercase tracking-[0.2em] font-bold hover:text-zinc-400 transition-colors py-2 outline-none">
+              Categories <ChevronDown size={14} className="opacity-50" />
+             </button>
+             {isDropdownOpen && (
+               <div className="absolute top-full left-1/2 -translate-x-1/2 pt-4 w-64 animate-in fade-in slide-in-from-top-2 duration-300">
+                 <div className="bg-white border border-zinc-100 shadow-[0_20px_40px_rgba(0,0,0,0.08)] p-8">
+                   <div className="flex flex-col gap-5">
+                     {categories.map(cat => (
+                       <Link key={cat.id} href={`/categories/${cat.slug}`} className="text-[11px] font-bold uppercase tracking-[0.2em] text-zinc-400 hover:text-black transition-colors flex items-center justify-between group/item">
+                         <span>{cat.name}</span>
+                         <span className="w-1 h-1 rounded-full bg-black scale-0 group-hover/item:scale-100 transition-transform"></span>
+                       </Link>
+                     ))}
+                   </div>
+                 </div>
+               </div>
+             )}
+          </li>
+          <li className="flex items-center">
+            <Link href="/products" className="text-[12px] uppercase tracking-[0.2em] font-bold hover:text-zinc-400 transition-colors py-2">Latest</Link>
+          </li>
+          <li className="flex items-center">
+            <Link href="#footer" className="text-[12px] uppercase tracking-[0.2em] font-bold hover:text-zinc-400 transition-colors py-2">Contact</Link>
+          </li>
         </ul>
 
+        {/* ACTIONS: Simplified Icons */}
         <div className="flex-1 flex items-center justify-end gap-6">
-          <Link href="/wishlist" className="relative">
+          <Link href="/wishlist" className="relative text-black hover:text-zinc-400 transition-colors">
             <Heart size={20} strokeWidth={1.5} />
             {wishlistItems.length > 0 && (
-              <span className="absolute -top-2 -right-2 bg-black text-white text-[9px] font-medium px-1.5 py-0.5 rounded-full">
+              <span className="absolute -top-2 -right-2 bg-black text-white text-[8px] font-bold w-4 h-4 flex items-center justify-center rounded-full">
                 {wishlistItems.length}
               </span>
             )}
           </Link>
-          <Link href="/cart" className="relative"><ShoppingCart size={20} strokeWidth={1.5} />{getCartCount() > 0 && <span className="absolute -top-2 -right-2 bg-black text-white text-[9px] font-medium px-1.5 py-0.5 rounded-full">{getCartCount()}</span>}</Link>
+          <Link href="/cart" className="relative text-black hover:text-zinc-400 transition-colors">
+            <ShoppingCart size={20} strokeWidth={1.5} />
+            {getCartCount() > 0 && (
+              <span className="absolute -top-2 -right-2 bg-black text-white text-[8px] font-bold w-4 h-4 flex items-center justify-center rounded-full">
+                {getCartCount()}
+              </span>
+            )}
+          </Link>
           <button className="group" onClick={openAuthModal}>
             <div className="flex items-center justify-center w-9 h-9 bg-gray-50 rounded-full group-hover:bg-black group-hover:text-white transition-all border border-gray-100 overflow-hidden">
               {user?.photoURL ? (
@@ -102,7 +138,9 @@ const Header = () => {
               )}
             </div>
           </button>
-          <button className="md:hidden" onClick={() => setIsOpen(!isOpen)}>{isOpen ? <X size={24} /> : <Menu size={24} />}</button>
+          <button className="md:hidden text-black" onClick={() => setIsOpen(!isOpen)}>
+            {isOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
         </div>
       </nav>
 

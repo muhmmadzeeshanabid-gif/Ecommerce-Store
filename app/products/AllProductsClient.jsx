@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import ProductCard from '../components/ProductCard';
 import CategoryNav from '../components/CategoryNav';
+import Image from 'next/image';
 import { ArrowUp } from 'lucide-react';
 import { fetchApi } from '../lib/api';
 
@@ -35,24 +36,24 @@ const AllProductsClient = ({ initialData }) => {
   };
 
   return (
-    <div className="bg-[#FAF9F6] min-h-screen pt-24 pb-20 relative">
-      <main className="container mx-auto px-6 lg:px-20 pt-12">
-        <div className="mb-12 space-y-4 pb-12">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-px bg-black/10"></div>
-            <p className="text-[10px] font-black tracking-[0.6em] text-black/20 uppercase">
-              Archive Collection / 2026
-            </p>
-          </div>
-          <h1 className="text-4xl md:text-6xl font-black text-black uppercase tracking-tighter leading-none mb-4">
+    <div className="bg-[#FAF9F6] min-h-screen pt-24 pb-20">
+      <main className="container mx-auto px-6 py-12">
+        <div className="flex flex-col items-center justify-center mb-8 md:mb-10 mt-4 text-center px-4">
+          <h1 className="text-5xl md:text-[70px] font-playfair italic font-medium text-zinc-900 tracking-tight leading-none mb-4">
             All Items
           </h1>
-          <p className="text-[12px] font-bold text-neutral-400 uppercase tracking-widest pt-6 border-t border-gray-100 inline-block">
-            Showing {products.length} of {pagination.total} Selected Items
-          </p>
+          <div className="flex items-center justify-center w-full max-w-sm gap-4 mb-4">
+            <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent to-zinc-400"></div>
+            <div className="w-2 h-2 rotate-45 bg-zinc-800 outline outline-offset-2 outline-1 outline-zinc-300"></div>
+            <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent to-zinc-400"></div>
+          </div>
+          <span className="text-[10px] md:text-xs font-semibold tracking-[0.4em] text-zinc-400 uppercase">
+            Curated Selection 2026
+          </span>
         </div>
 
-        <div className="sticky top-[80px] z-[40] bg-[#FAF9F6]/90 backdrop-blur-md mb-16 -mx-6 lg:-mx-20 px-6 lg:px-20 py-6 border-b border-gray-100">
+        {/* STICKY CATEGORY FILTERS below Heading */}
+        <div className="sticky top-[80px] z-[40] bg-[#FAF9F6]/90 backdrop-blur-md mb-16 -mx-6 px-6 py-6 border-b border-black/5">
           <CategoryNav />
         </div>
 

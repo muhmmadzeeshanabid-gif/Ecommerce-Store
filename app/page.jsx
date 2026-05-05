@@ -10,7 +10,7 @@ export const metadata = {
 export const revalidate = 60; // Revalidate every 60 seconds
 
 export default async function Home() {
-  const brands = ["VERSACE", "ZARA", "GUCCI", "PRADA", "CALVIN KLEIN"];
+  const brands = ["VERSACE", "ZARA", "GUCCI", "PRADA", "CHANEL", "DIOR", "ARMANI", "BALENCIAGA", "ROLEX", "CARTIER", "BURBERRY"];
   let featuredProducts = [];
 
   try {
