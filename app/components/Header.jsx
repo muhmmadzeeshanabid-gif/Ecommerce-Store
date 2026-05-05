@@ -87,15 +87,29 @@ const Header = () => {
               Categories <ChevronDown size={14} className="opacity-50" />
              </button>
              {isDropdownOpen && (
-               <div className="absolute top-full left-1/2 -translate-x-1/2 pt-4 w-64 animate-in fade-in slide-in-from-top-2 duration-300">
-                 <div className="bg-white border border-zinc-100 shadow-[0_20px_40px_rgba(0,0,0,0.08)] p-8">
-                   <div className="flex flex-col gap-5">
-                     {categories.map(cat => (
-                       <Link key={cat.id} href={`/categories/${cat.slug}`} className="text-[11px] font-bold uppercase tracking-[0.2em] text-zinc-400 hover:text-black transition-colors flex items-center justify-between group/item">
-                         <span>{cat.name}</span>
-                         <span className="w-1 h-1 rounded-full bg-black scale-0 group-hover/item:scale-100 transition-transform"></span>
-                       </Link>
-                     ))}
+               <div className="absolute top-full left-1/2 -translate-x-1/2 pt-4 w-[450px] animate-in fade-in slide-in-from-top-4 duration-500">
+                 <div className="bg-white border-t-2 border-black shadow-[0_30px_60px_rgba(0,0,0,0.12)] overflow-hidden">
+                   <div className="p-8">
+                     <h3 className="text-xl font-playfair italic font-bold mb-6 tracking-tight">Explore Collections</h3>
+                     <div className="grid grid-cols-2 gap-x-10 gap-y-4">
+                       {categories.map(cat => (
+                         <Link 
+                           key={cat.id} 
+                           href={`/categories/${cat.slug}`} 
+                           className="group/item flex items-center gap-3 py-1"
+                         >
+                           <div className="w-1.5 h-1.5 rounded-full bg-black scale-0 group-hover/item:scale-100 transition-all duration-300"></div>
+                           <span className="text-[12px] font-bold uppercase tracking-[0.15em] text-zinc-400 group-hover:text-black group-hover:translate-x-1 transition-all duration-300">
+                             {cat.name}
+                           </span>
+                         </Link>
+                       ))}
+                     </div>
+                   </div>
+                   <div className="bg-zinc-50 p-4 text-center">
+                     <Link href="/products" className="text-[10px] font-bold uppercase tracking-[0.3em] text-zinc-400 hover:text-black transition-colors">
+                       View All Products →
+                     </Link>
                    </div>
                  </div>
                </div>
