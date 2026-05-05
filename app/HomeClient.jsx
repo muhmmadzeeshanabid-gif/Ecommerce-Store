@@ -8,7 +8,7 @@ import ProductCard from './components/ProductCard';
 const sliderData = [
   {
     id: 1,
-    image: "/hero_final_1.png",
+    image: "/hero_couple_inside.png",
     badge: "Exclusive Collection",
     titleLine1: "Find Cloth",
     titleLine2: "That Matches",
